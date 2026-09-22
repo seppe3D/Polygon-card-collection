@@ -42,6 +42,7 @@ button,input,textarea{font:inherit}
 a{color:var(--amber-soft)}
 .wrap{max-width:560px;margin:0 auto;padding:28px 20px 56px}
 .wrap.wide{max-width:1180px}
+.col{max-width:640px}
 .hint{color:var(--ink-soft);margin:0 0 20px;max-width:64ch}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px}
@@ -327,7 +328,7 @@ function renderCard(c, { locked = false, count = 1 } = {}) {
 // ---------- Hoofdscherm ----------
 function renderMain() {
   app.innerHTML = `
-  <div class="wrap ${state.tab === 'book' ? 'wide' : ''}" id="wrap">
+  <div class="wrap wide" id="wrap">
     <header class="top">
       <span class="brand">POLYGON <em>Card Collection</em></span>
       <span class="who">${esc(state.name)} <button class="link" id="logout">Uitloggen</button></span>
@@ -369,37 +370,36 @@ function playSummary(play) {
 function renderToday(view) {
   if (state.play) {
     const card = state.cards.find(c => c.id === state.play.card_id);
-    view.innerHTML = `<section>
+    view.innerHTML = `<section class="col">
       <h2>Vandaag is gedaan</h2>
       <p class="hint">${playSummary(state.play)} Morgen kan je opnieuw een kaart trekken.</p>
       <div class="stage">${card ? renderCard(card) : ''}</div></section>`;
     return;
   }
-  view.innerHTML = `<section>
+  view.innerHTML = `<section class="col">
     <h2>Wordle van vandaag</h2>
-    <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart.</p>
+    <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart.</p>
     <div id="uploadbox" class="form">
-      <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Wordle 1921 4/6
-
-⬛⬛⬛⬛🟩
-🟩🟩⬛⬛🟩
-🟩🟩🟩⬛🟩
-🟩🟩🟩🟩🟩"></textarea></label>
+      <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Plak hier je gedeelde Wordle-resultaat"></textarea></label>
+      <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. CRANE"></label>
       <button class="btn" id="go" disabled>Kaart trekken</button>
       <p id="msg" role="alert" class="msg"></p>
     </div>
     <div class="stage" id="stage" aria-live="polite"></div>
   </section>`;
-  $('#sharetext').oninput = e => {
-    $('#go').disabled = e.target.value.trim().length < 10;
+  const checkReady = () => {
+    $('#go').disabled = $('#sharetext').value.trim().length < 10 || $('#word').value.trim().length !== 5;
     $('#msg').textContent = '';
   };
+  $('#sharetext').oninput = checkReady;
+  $('#word').oninput = checkReady;
   $('#go').onclick = async () => {
     const msg = $('#msg'), go = $('#go');
     go.disabled = true; msg.className = 'msg'; msg.textContent = 'Resultaat controleren…';
     try {
       const text = $('#sharetext').value;
-      const { data, error } = await sb.functions.invoke('submit-wordle', { body: { text } });
+      const word = $('#word').value;
+      const { data, error } = await sb.functions.invoke('submit-wordle', { body: { text, word } });
       if (error) {
         let errText = 'Er ging iets mis. Probeer het opnieuw.';
         try { errText = (await error.context.json()).error || errText; } catch (_) {}
