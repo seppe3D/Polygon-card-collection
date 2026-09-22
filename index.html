@@ -223,11 +223,24 @@ a{color:var(--amber-soft)}
 
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
 dialog::backdrop{background:rgba(10,12,16,.78)}
-.zoombox{width:min(440px,92vw);padding:18px;display:grid;gap:12px;justify-items:center;animation:zoom-in .22s ease both}
+.zoombox{width:min(480px,92vw);padding:18px;display:grid;gap:12px;justify-items:center;animation:zoom-in .22s ease both}
 @keyframes zoom-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
-.zoombox .cw{width:100%}
 .zoombox .link{color:#fff}
+.zoomhint{color:var(--ink-soft);font-size:14px;text-align:center;margin:0}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
+
+/* 3D-draaibare kaart (voor- en achterkant, sleep om te roteren) */
+.flip-wrap{width:100%;perspective:1400px}
+.flip-card{position:relative;width:100%;aspect-ratio:5/7;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.3,1);cursor:grab;touch-action:none;will-change:transform}
+.flip-card.dragging{transition:none;cursor:grabbing}
+.flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip-face.back{transform:rotateY(180deg)}
+.cardback{position:relative;aspect-ratio:5/7;border-radius:6.5cqw;border:2.2cqw solid var(--rc,var(--grey));
+  background:radial-gradient(circle at 50% 40%,#1c2620,#0d100c 75%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.1), 0 10px 26px -10px rgba(0,0,0,.65);
+  display:grid;place-items:center;overflow:hidden}
+.cardback img{width:62%;height:auto;display:block;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
+.zoombox .cw{width:100%}
 
 /* Account-instellingen modal (naam/e-mail/wachtwoord/profielfoto) */
 .accbox{width:min(420px,92vw);padding:26px;display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet);animation:zoom-in .2s ease both}
@@ -403,6 +416,54 @@ function renderAuth(mode) {
   };
 }
 
+// ---------- 3D-draaibare kaart (voor/achter, gebruikt in de zoom-dialoog) ----------
+const CARD_BACK_URL = 'cards/card-back.png';
+
+function renderZoomCard(c, opts = {}) {
+  const rarityClass = `r-${c.rarity}`;
+  const front = renderCard(c, opts);
+  return `<div class="flip-wrap"><div class="flip-card ${rarityClass}" id="flipCard">
+    <div class="flip-face front">${front}</div>
+    <div class="flip-face back"><div class="cardback"><img src="${esc(CARD_BACK_URL)}" alt="Polygon Trading Cards logo"></div></div>
+  </div></div>`;
+}
+
+function attachFlip3D() {
+  const card = $('#flipCard');
+  if (!card) return;
+  let dragging = false, moved = false, startX = 0, startY = 0, startRotX = 0, startRotY = 0, rotX = 0, rotY = 0;
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const apply = () => { card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`; };
+  const snap = () => {
+    rotY = Math.round(rotY / 180) * 180;
+    rotX = 0;
+    apply();
+  };
+  card.addEventListener('pointerdown', e => {
+    dragging = true; moved = false;
+    startX = e.clientX; startY = e.clientY; startRotX = rotX; startRotY = rotY;
+    card.classList.add('dragging');
+    card.setPointerCapture(e.pointerId);
+  });
+  card.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+    rotY = startRotY + dx * 0.6;
+    rotX = clamp(startRotX - dy * 0.4, -22, 22);
+    apply();
+  });
+  const release = () => {
+    if (!dragging) return;
+    dragging = false;
+    card.classList.remove('dragging');
+    if (!moved) { rotY += 180; } // tik zonder slepen = flippen
+    snap();
+  };
+  card.addEventListener('pointerup', release);
+  card.addEventListener('pointercancel', release);
+}
+
 // ---------- Kaart tekenen ----------
 function renderCard(c, { locked = false, count = 1 } = {}) {
   const label = RARITY_LABEL[c.rarity];
@@ -456,7 +517,7 @@ function renderMain() {
     <div id="view"></div>
   </div>
   <dialog id="zoom" aria-label="Kaart bekijken">
-    <div class="zoombox"><div id="zcard"></div><button class="link" id="zclose">Sluiten</button></div>
+    <div class="zoombox"><div id="zcard"></div><p class="zoomhint">Sleep om te draaien · tik om te flippen</p><button class="link" id="zclose">Sluiten</button></div>
   </dialog>
   <dialog id="accModal" aria-label="Accountinstellingen"></dialog>`;
   $('#openAccount').onclick = () => openAccountModal();
@@ -741,8 +802,9 @@ function drawBook(view, groups, animate) {
     b.onclick = () => {
       const card = state.cards.find(c => c.id === Number(b.dataset.id));
       const n = state.owned.get(card.id) || 0;
-      $('#zcard').innerHTML = renderCard(card, n ? { count: n } : { locked: true });
+      $('#zcard').innerHTML = renderZoomCard(card, n ? { count: n } : { locked: true });
       $('#zoom').showModal();
+      attachFlip3D();
     };
   });
 }
