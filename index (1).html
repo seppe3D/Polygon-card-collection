@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wordle Kaarten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4EAEE; --sleeve:#F6F8F9; --ink:#16252D; --muted:#566872; --line:#C3CED5;
+  --green:#4C8A47; --yellow:#B69B2B; --grey:#787C7E; --gold:#B98910; --cat:#1F8F8A;
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);min-height:100vh}
+h1,h2{font-family:var(--display);font-weight:800;line-height:1.1;margin:0 0 8px}
+h1{font-size:34px}
+h2{font-size:26px}
+button,input{font:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 48px}
+.hint{color:var(--muted);margin:0 0 16px;max-width:60ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+
+/* Knoppen en formulieren */
+.btn{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:14px 18px;font:600 16px var(--body);min-height:48px;cursor:pointer;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:15px}
+.form{display:grid;gap:14px;margin:20px 0 6px}
+.form label{display:grid;gap:6px;font-weight:600;font-size:15px}
+.form input,.form textarea{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px;min-height:48px;font-weight:400;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;line-height:1.4;resize:vertical}
+.msg{margin:0;min-height:1.5em;font-size:15px}
+.msg.err,.err{color:#A02E2E}
+.msg.ok{color:var(--green)}
+
+/* Wordle-tegels */
+.tile{width:clamp(44px,14vw,60px);aspect-ratio:1;display:grid;place-items:center;border-radius:6px;color:#fff;font:800 clamp(24px,8vw,34px)/1 var(--display)}
+.t-g{background:var(--green)} .t-y{background:var(--yellow)} .t-x{background:var(--grey)}
+.tilerow,.hero{display:flex;gap:6px;justify-content:center}
+.hero{margin:28px 0 22px;justify-content:flex-start}
+.tile.t-pending{background:var(--grey)}
+.tile.flip{animation:flip .55s ease-in-out both;animation-delay:calc(var(--i) * .3s)}
+@keyframes flip{
+  0%{transform:rotateX(0)}
+  49%{transform:rotateX(90deg);background:var(--grey)}
+  51%{transform:rotateX(90deg);background:var(--final)}
+  100%{transform:rotateX(0);background:var(--final)}
+}
+
+/* Kopregel en tabs */
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 0 12px}
+.brand{font:800 20px var(--display)}
+.who{display:flex;gap:4px;align-items:center;color:var(--muted);font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--sleeve);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px}
+.tabs button{border:0;background:transparent;border-radius:9px;padding:11px;font:600 15px var(--body);color:var(--muted);cursor:pointer;min-height:44px}
+.tabs button[aria-current="page"]{background:var(--ink);color:#fff}
+
+/* Upload */
+.stage{display:grid;justify-items:center;gap:14px;margin-top:20px}
+.stage .cw{width:min(260px,70vw)}
+.result{margin:0;text-align:center;font-weight:600}
+.pop{animation:pop .45s cubic-bezier(.2,1.2,.4,1)}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Kaarten (schalen mee met hun breedte) */
+.cw{container-type:inline-size;width:100%;position:relative}
+.card{position:relative;aspect-ratio:5/7;border-radius:6cqw;padding:5cqw;display:flex;flex-direction:column;gap:3cqw;border:1.4cqw solid var(--rc);background:var(--rbg);color:var(--ink);overflow:hidden;font-size:8cqw;text-align:left}
+.chead{display:flex;justify-content:space-between;align-items:baseline;gap:2cqw;font:800 9cqw/1.05 var(--display)}
+.cname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp{font:600 7cqw var(--body);white-space:nowrap}
+.art{flex:1;min-height:0;border-radius:3cqw;background:var(--art);display:grid;place-items:center;overflow:hidden;border:.8cqw solid rgba(0,0,0,.12)}
+.art img{width:100%;height:100%;object-fit:cover}
+.ptile{width:38cqw;aspect-ratio:1;border-radius:3cqw;display:grid;place-items:center;background:var(--green);color:#fff;font:800 24cqw/1 var(--display)}
+.ptile.cat{background:transparent;font-size:30cqw}
+.cfoot{display:flex;justify-content:space-between;font:600 7cqw var(--body)}
+.special{font:600 7cqw/1.15 var(--body);border-top:.8cqw solid rgba(0,0,0,.18);padding-top:2cqw}
+.special small{display:none;font-weight:400}
+@container (min-width:180px){.special small{display:block;margin-top:1cqw}}
+.r-common{--rc:#8A98A1;--rbg:linear-gradient(165deg,#fff,#E7ECEF);--art:#DDE4E8}
+.r-epic{--rc:#6C4BC2;--rbg:linear-gradient(140deg,#F3EEFF,#D5C7F7 45%,#F3EEFF 60%,#C4B0F2);--art:linear-gradient(135deg,#B9A2F0,#7F5FD0)}
+.r-legendary{--rc:#B98910;--rbg:linear-gradient(140deg,#FFF6D6,#F1CF6A 45%,#FFF1BE 60%,#E2B83E);--art:linear-gradient(135deg,#F5D97A,#C99A1E)}
+.r-legendary::after{content:"";position:absolute;inset:-50%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-60%);animation:shine 5s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+.r-cat{--rc:#1F8F8A;--rbg:linear-gradient(165deg,#EAFBF9,#C9EEEA);--art:#A9DDD8}
+.locked{filter:grayscale(1);opacity:.5}
+.q{font:800 30cqw/1 var(--display);color:rgba(0,0,0,.28)}
+.dupe{position:absolute;right:-4px;top:-6px;background:var(--ink);color:#fff;border-radius:99px;padding:1px 7px;font:600 12px var(--body);z-index:2}
+
+/* Verzamelboek */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px}
+.chip{flex:none;border:1px solid var(--line);background:var(--sleeve);border-radius:99px;padding:8px 14px;font:600 14px var(--body);cursor:pointer;color:var(--ink);min-height:40px}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip span{opacity:.7;font-weight:400;margin-left:4px}
+.count{color:var(--muted);margin:0 0 12px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px;background:var(--sleeve);border:1px solid var(--line);border-radius:14px}
+.slot{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;display:block}
+div.slot{cursor:default}
+
+dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
+dialog::backdrop{background:rgba(22,37,45,.65)}
+.zoombox{width:min(320px,86vw);padding:16px;display:grid;gap:8px;justify-items:center}
+.zoombox .cw{width:100%}
+.zoombox .link{color:#fff}
+.loading{padding:40px 16px;text-align:center;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){
+  .r-legendary::after,.pop,.tile.flip{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="app"><p class="loading">Laden…</p></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// ---------------------------------------------------------------
+// Vul hier de gegevens van je Supabase-project in
+// (Project Settings > API). De anon key mag publiek staan.
+// ---------------------------------------------------------------
+const CONFIG = {
+  SUPABASE_URL: 'https://rmgnkwlmgtfamhioncny.supabase.co/rest/v1/',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZ25rd2xtZ3RmYW1oaW9uY255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTM3MTMsImV4cCI6MjEwNTYyOTcxM30.rGXsDOX0Bd42qmnXh3VQm2WyQHPymmdSywnFDNOVnUg'
+};
+
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const app = document.getElementById('app');
+const $ = (sel, el = document) => el.querySelector(sel);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const RARITY_LABEL = { common: 'Common', epic: 'Epic', legendary: 'Legendary', cat: 'Troostkat' };
+const TILE_COLORS = { g: 'var(--green)', y: 'var(--yellow)', x: 'var(--grey)' };
+const REVEAL_PATTERN = {
+  common: ['g','x','x','x','x'],
+  epic: ['g','g','g','x','x'],
+  legendary: ['g','g','g','g','g'],
+  cat: ['y','y','y','y','y']
+};
+
+const state = { session: null, cards: [], owned: new Map(), play: null, name: '', tab: 'today', page: 0 };
+
+const todayBrussels = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' });
+const tiles = (word, cls) => [...word].map((ch, i) => `<span class="tile t-${cls[i]}">${ch}</span>`).join('');
+const plural = n => n === 1 ? 'poging' : 'pogingen';
+
+// ---------- Opstart en routing ----------
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  state.session = session;
+  sb.auth.onAuthStateChange((_event, s) => {
+    const changed = s?.user?.id !== state.session?.user?.id;
+    state.session = s;
+    if (changed) route();
+  });
+  route();
+}
+
+async function route() {
+  if (!state.session) { renderAuth('login'); return; }
+  app.innerHTML = '<p class="loading">Laden…</p>';
+  try {
+    await loadData();
+    renderMain();
+  } catch (e) {
+    app.innerHTML = `<main class="wrap"><p role="alert" class="err">${esc(e.message)}</p><button class="btn" id="out">Uitloggen</button></main>`;
+    $('#out').onclick = () => sb.auth.signOut();
+  }
+}
+
+async function loadData() {
+  const uid = state.session.user.id;
+  const [cards, mine, play, prof] = await Promise.all([
+    sb.from('cards').select('*').order('id'),
+    sb.from('user_cards').select('card_id').eq('user_id', uid),
+    sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
+    sb.from('profiles').select('display_name').eq('id', uid).maybeSingle()
+  ]);
+  for (const r of [cards, mine, play, prof]) if (r.error) throw new Error(r.error.message);
+  state.cards = cards.data;
+  state.owned = new Map();
+  for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
+  state.play = play.data;
+  state.name = prof.data?.display_name || state.session.user.email.split('@')[0];
+}
+
+// ---------- Inloggen ----------
+function renderAuth(mode) {
+  const reg = mode === 'register';
+  app.innerHTML = `
+  <main class="wrap">
+    <div class="hero" aria-hidden="true">${tiles('KAART', ['g','y','x','g','g'])}</div>
+    <h1>Wordle Kaarten</h1>
+    <p class="hint">Los de dagelijkse Wordle op, upload je screenshot en verzamel kaarten van je collega's.</p>
+    <form id="authform" class="form">
+      ${reg ? '<label>Naam<input name="name" required autocomplete="nickname" maxlength="30"></label>' : ''}
+      <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
+      <label>Wachtwoord<input name="password" type="password" required minlength="6" autocomplete="${reg ? 'new-password' : 'current-password'}"></label>
+      <button class="btn" type="submit">${reg ? 'Account maken' : 'Inloggen'}</button>
+      <p id="authmsg" role="alert" class="msg"></p>
+    </form>
+    <button class="link" id="switch">${reg ? 'Ik heb al een account' : 'Nog geen account? Maak er een'}</button>
+  </main>`;
+  $('#switch').onclick = () => renderAuth(reg ? 'login' : 'register');
+  $('#authform').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const msg = $('#authmsg');
+    const btn = e.target.querySelector('button[type=submit]');
+    msg.textContent = ''; msg.className = 'msg'; btn.disabled = true;
+    try {
+      if (reg) {
+        const { data, error } = await sb.auth.signUp({
+          email: f.get('email'), password: f.get('password'),
+          options: { data: { display_name: f.get('name') } }
+        });
+        if (error) throw error;
+        if (!data.session) {
+          msg.textContent = 'Account gemaakt. Bevestig je e-mailadres via de mail die we stuurden en log daarna in.';
+          msg.className = 'msg ok';
+        }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email: f.get('email'), password: f.get('password') });
+        if (error) throw error;
+      }
+    } catch (err) {
+      msg.textContent = err.message; msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
+// ---------- Kaart tekenen ----------
+function renderCard(c, { locked = false, count = 1 } = {}) {
+  const label = RARITY_LABEL[c.rarity];
+  if (locked) {
+    return `<div class="cw"><div class="card r-${c.rarity} locked" aria-label="Nog niet verzameld">
+      <div class="chead"><span class="cname">???</span></div>
+      <div class="art"><span class="q">?</span></div>
+      <div class="cfoot"><span>${label}</span></div></div></div>`;
+  }
+  const initial = esc((c.person || '?').trim().charAt(0).toUpperCase());
+  const art = c.image_url
+    ? `<img src="${esc(c.image_url)}" alt="${esc(c.name)}" loading="lazy">`
+    : (c.rarity === 'cat' ? '<span class="ptile cat">🐱</span>' : `<span class="ptile">${initial}</span>`);
+  const special = c.special_name
+    ? `<div class="special">★ ${esc(c.special_name)}${c.special_power ? ` (${esc(c.special_power)})` : ''}<small>${esc(c.special_desc)}</small></div>`
+    : '';
+  return `<div class="cw">
+    ${count > 1 ? `<span class="dupe">×${count}</span>` : ''}
+    <div class="card r-${c.rarity}">
+      <div class="chead"><span class="cname">${esc(c.name)}</span><span class="hp">HP ${esc(c.hp)}</span></div>
+      <div class="art">${art}</div>
+      <div class="cfoot"><span>${label}</span><span>ATK ${esc(c.attack)} / DEF ${esc(c.defense)}</span></div>
+      ${special}
+    </div></div>`;
+}
+
+// ---------- Hoofdscherm ----------
+function renderMain() {
+  app.innerHTML = `
+  <div class="wrap">
+    <header class="top">
+      <span class="brand">Wordle Kaarten</span>
+      <span class="who">${esc(state.name)} <button class="link" id="logout">Uitloggen</button></span>
+    </header>
+    <nav class="tabs" aria-label="Weergave">
+      <button data-tab="today">Vandaag</button>
+      <button data-tab="book">Mijn boek</button>
+    </nav>
+    <div id="view"></div>
+  </div>
+  <dialog id="zoom" aria-label="Kaart bekijken">
+    <div class="zoombox"><div id="zcard"></div><button class="link" id="zclose">Sluiten</button></div>
+  </dialog>`;
+  $('#logout').onclick = () => sb.auth.signOut();
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.onclick = () => { state.tab = b.dataset.tab; renderView(); };
+  });
+  const dlg = $('#zoom');
+  $('#zclose').onclick = () => dlg.close();
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  renderView();
+}
+
+function renderView() {
+  document.querySelectorAll('.tabs button').forEach(b => {
+    if (b.dataset.tab === state.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  const view = $('#view');
+  if (state.tab === 'today') renderToday(view); else renderBook(view);
+}
+
+// ---------- Tab: Vandaag ----------
+function playSummary(play) {
+  return play.solved
+    ? `Opgelost in ${play.attempts} ${plural(play.attempts)}.`
+    : 'Niet opgelost vandaag. Je kreeg een troostkat.';
+}
+
+function renderToday(view) {
+  if (state.play) {
+    const card = state.cards.find(c => c.id === state.play.card_id);
+    view.innerHTML = `<section>
+      <h2>Vandaag is gedaan</h2>
+      <p class="hint">${playSummary(state.play)} Morgen kan je opnieuw een kaart trekken.</p>
+      <div class="stage">${card ? renderCard(card) : ''}</div></section>`;
+    return;
+  }
+  view.innerHTML = `<section>
+    <h2>Wordle van vandaag</h2>
+    <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart.</p>
+    <div id="uploadbox" class="form">
+      <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Wordle 1921 4/6
+
+⬛⬛⬛⬛🟩
+🟩🟩⬛⬛🟩
+🟩🟩🟩⬛🟩
+🟩🟩🟩🟩🟩"></textarea></label>
+      <button class="btn" id="go" disabled>Kaart trekken</button>
+      <p id="msg" role="alert" class="msg"></p>
+    </div>
+    <div class="stage" id="stage" aria-live="polite"></div>
+  </section>`;
+  $('#sharetext').oninput = e => {
+    $('#go').disabled = e.target.value.trim().length < 10;
+    $('#msg').textContent = '';
+  };
+  $('#go').onclick = async () => {
+    const msg = $('#msg'), go = $('#go');
+    go.disabled = true; msg.className = 'msg'; msg.textContent = 'Resultaat controleren…';
+    try {
+      const text = $('#sharetext').value;
+      const { data, error } = await sb.functions.invoke('submit-wordle', { body: { text } });
+      if (error) {
+        let errText = 'Er ging iets mis. Probeer het opnieuw.';
+        try { errText = (await error.context.json()).error || errText; } catch (_) {}
+        throw new Error(errText);
+      }
+      state.play = { solved: data.solved, attempts: data.attempts, card_id: data.card.id, play_date: todayBrussels() };
+      state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
+      $('#uploadbox').hidden = true;
+      await revealCard(data);
+    } catch (err) {
+      msg.className = 'msg err'; msg.textContent = err.message; go.disabled = false;
+    }
+  };
+}
+
+async function revealCard(res) {
+  const stage = $('#stage');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const pattern = REVEAL_PATTERN[res.rarity];
+    stage.innerHTML = `<div class="tilerow" aria-hidden="true">${[...'KAART'].map((ch, i) =>
+      `<span class="tile flip t-pending" style="--i:${i};--final:${TILE_COLORS[pattern[i]]}">${ch}</span>`).join('')}</div>`;
+    await sleep(2000);
+  }
+  const text = res.solved
+    ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[res.rarity]}-kaart.`
+    : 'Niet opgelost vandaag. Je krijgt een troostkat.';
+  stage.innerHTML = `<div class="pop">${renderCard(res.card)}</div><p class="result">${text}</p>`;
+}
+
+// ---------- Tab: Mijn boek ----------
+function bookGroups() {
+  const groups = [];
+  for (const c of state.cards) {
+    let g = groups.find(x => x.name === c.person);
+    if (!g) { g = { name: c.person, cards: [] }; groups.push(g); }
+    g.cards.push(c);
+  }
+  for (const g of groups) g.cards.sort((a, b) => a.slot - b.slot);
+  return groups;
+}
+const ownedIn = g => g.cards.filter(c => state.owned.has(c.id)).length;
+
+function renderBook(view) {
+  const groups = bookGroups();
+  if (!groups.length) { view.innerHTML = '<p class="hint">Er zijn nog geen kaarten in de database.</p>'; return; }
+  if (state.page >= groups.length) state.page = 0;
+  const g = groups[state.page];
+  const people = groups.filter(x => x.name !== 'Katten');
+  const total = people.reduce((n, x) => n + x.cards.length, 0);
+  const have = people.reduce((n, x) => n + ownedIn(x), 0);
+  const dupes = [...state.owned.values()].reduce((n, v) => n + (v - 1), 0);
+
+  view.innerHTML = `<section>
+    <p class="count">${have} van ${total} collega-kaarten verzameld${dupes ? `, ${dupes} dubbel` : ''}</p>
+    <div class="chips" role="group" aria-label="Boekpagina's">${groups.map((x, i) =>
+      `<button class="chip" data-i="${i}" aria-pressed="${i === state.page}">${esc(x.name)}<span>${ownedIn(x)}/${x.cards.length}</span></button>`).join('')}</div>
+    <div class="grid">${g.cards.map(c => {
+      const n = state.owned.get(c.id) || 0;
+      return n
+        ? `<button class="slot" data-id="${c.id}" aria-label="${esc(c.name)} bekijken">${renderCard(c, { count: n })}</button>`
+        : `<div class="slot">${renderCard(c, { locked: true })}</div>`;
+    }).join('')}</div>
+  </section>`;
+
+  view.querySelectorAll('.chip').forEach(b => {
+    b.onclick = () => { state.page = Number(b.dataset.i); renderBook(view); };
+  });
+  view.querySelectorAll('button.slot').forEach(b => {
+    b.onclick = () => {
+      const card = state.cards.find(c => c.id === Number(b.dataset.id));
+      $('#zcard').innerHTML = renderCard(card, { count: state.owned.get(card.id) || 1 });
+      $('#zoom').showModal();
+    };
+  });
+}
+
+init();
+</script>
+</body>
+</html>
