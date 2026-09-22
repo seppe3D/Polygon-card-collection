@@ -35,18 +35,6 @@ body::before{
     linear-gradient(25deg,transparent 48%,rgba(255,255,255,.035) 49%,rgba(255,255,255,.035) 50%,transparent 51%);
   background-size:140px 140px,90px 90px;
 }
-body::after{
-  content:"";position:fixed;inset:-10%;z-index:-1;opacity:.6;pointer-events:none;
-  background:
-    radial-gradient(560px 380px at 12% 8%,rgba(232,163,61,.12),transparent 60%),
-    radial-gradient(480px 360px at 88% 88%,rgba(108,75,194,.12),transparent 60%),
-    radial-gradient(420px 320px at 90% 12%,rgba(47,167,158,.08),transparent 60%);
-  animation:aura-drift 16s ease-in-out infinite alternate;
-}
-@keyframes aura-drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-2%,2%) scale(1.06)}}
-.logo-poly{color:var(--amber-soft);animation:logo-spin 9s linear infinite;flex:none}
-@keyframes logo-spin{to{transform:rotate(360deg)}}
-.brand{text-shadow:0 0 22px rgba(232,163,61,.3)}
 h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.08;margin:0 0 8px;color:#fff}
 h1{font-size:clamp(30px,5vw,46px)}
 h2{font-size:clamp(22px,3vw,30px)}
@@ -60,8 +48,8 @@ a{color:var(--amber-soft)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 
 /* Knoppen en formulieren */
-.btn{background:var(--amber);color:#1B2028;border:0;clip-path:var(--facet-sm);padding:15px 20px;font:700 16px var(--body);min-height:50px;cursor:pointer;width:100%;transition:transform .15s ease, background .15s ease, box-shadow .15s ease}
-.btn:hover:not(:disabled){background:var(--amber-soft);transform:translateY(-1px);box-shadow:0 10px 26px -10px rgba(232,163,61,.65)}
+.btn{background:var(--amber);color:#1B2028;border:0;clip-path:var(--facet-sm);padding:15px 20px;font:700 16px var(--body);min-height:50px;cursor:pointer;width:100%;transition:transform .15s ease, background .15s ease}
+.btn:hover:not(:disabled){background:var(--amber-soft);transform:translateY(-1px)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .link{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:15px}
 .link:hover{color:var(--amber-soft)}
@@ -94,13 +82,8 @@ a{color:var(--amber-soft)}
 .brand em{font-style:normal;color:var(--amber-soft)}
 .who{display:flex;gap:6px;align-items:center;color:var(--ink-soft);font-size:14px}
 .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:26px}
-.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:12px;font:700 15px var(--body);color:var(--ink-soft);cursor:pointer;min-height:44px;transition:box-shadow .2s ease}
-.tabs button[aria-current="page"]{background:var(--amber);color:#1B2028;box-shadow:0 6px 20px -6px rgba(232,163,61,.65)}
-.wrap.wide{position:relative}
-.wrap.wide::before,.wrap.wide::after{content:"";position:absolute;top:-6px;width:20px;height:20px;pointer-events:none;opacity:.4}
-.wrap.wide::before{left:-6px;border-top:2px solid var(--amber);border-left:2px solid var(--amber)}
-.wrap.wide::after{right:-6px;border-top:2px solid var(--amber);border-right:2px solid var(--amber)}
-.uphint{font-weight:500;text-transform:none;color:var(--muted);font-size:12.5px}
+.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:12px;font:700 15px var(--body);color:var(--ink-soft);cursor:pointer;min-height:44px}
+.tabs button[aria-current="page"]{background:var(--amber);color:#1B2028}
 
 /* Upload */
 .stage{display:grid;justify-items:center;gap:16px;margin-top:24px}
@@ -109,71 +92,22 @@ a{color:var(--amber-soft)}
 .pop{animation:pop .5s cubic-bezier(.2,1.2,.4,1)}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 
-.glow{position:absolute;inset:-30%;border-radius:50%;filter:blur(30px);opacity:0;animation:glow-in .7s ease-out .3s both}
+/* Shard-animatie bij het trekken */
+.shard-wrap{position:relative;width:min(220px,60vw);aspect-ratio:5/7;display:grid;place-items:center}
+.shard{position:absolute;inset:0;border:2px solid var(--amber);clip-path:var(--facet);background:linear-gradient(160deg,var(--panel),var(--bg2));animation:spin-settle 1.5s cubic-bezier(.3,.8,.3,1) both}
+.shard.s2{animation-delay:.08s;opacity:.6;border-color:var(--amber-soft)}
+.shard.s3{animation-delay:.16s;opacity:.35}
+@keyframes spin-settle{
+  0%{transform:rotate(0deg) scale(.4);opacity:0}
+  55%{transform:rotate(200deg) scale(1.06);opacity:1}
+  100%{transform:rotate(360deg) scale(1);opacity:0}
+}
+.glow{position:absolute;inset:-30%;border-radius:50%;filter:blur(30px);opacity:0;animation:glow-in .7s ease-out .9s both}
 @keyframes glow-in{from{opacity:0;transform:scale(.6)}to{opacity:.55;transform:scale(1)}}
 .glow.common{background:radial-gradient(circle,var(--grey),transparent 70%)}
 .glow.epic{background:radial-gradient(circle,#8B5CF6,transparent 70%)}
 .glow.legendary{background:radial-gradient(circle,var(--gold),transparent 70%)}
 .glow.cat{background:radial-gradient(circle,var(--cat),transparent 70%)}
-
-/* Volledig-scherm onthulling bij het trekken van een kaart */
-.reveal-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#050609;opacity:0;pointer-events:none;transition:opacity .3s ease;overflow:hidden}
-.reveal-overlay.show{opacity:1;pointer-events:auto}
-.reveal-overlay.shake{animation:screen-shake .45s ease}
-@keyframes screen-shake{
-  0%,100%{transform:translate(0,0)} 20%{transform:translate(-9px,5px)} 40%{transform:translate(8px,-6px)}
-  60%{transform:translate(-6px,-4px)} 80%{transform:translate(6px,5px)}
-}
-.reveal-rays{position:absolute;inset:-60%;opacity:.6;animation:rays-spin 14s linear infinite;
-  background:conic-gradient(from 0deg,transparent 0deg,rgba(255,255,255,.06) 6deg,transparent 14deg,transparent 44deg,rgba(255,255,255,.06) 50deg,transparent 58deg,transparent 88deg,rgba(255,255,255,.06) 94deg,transparent 102deg,transparent 132deg,rgba(255,255,255,.06) 138deg,transparent 146deg,transparent 176deg,rgba(255,255,255,.06) 182deg,transparent 190deg,transparent 220deg,rgba(255,255,255,.06) 226deg,transparent 234deg,transparent 264deg,rgba(255,255,255,.06) 270deg,transparent 278deg,transparent 308deg,rgba(255,255,255,.06) 314deg,transparent 322deg,transparent 352deg,rgba(255,255,255,.06) 358deg,transparent 360deg)}
-@keyframes rays-spin{to{transform:rotate(360deg)}}
-.reveal-vignette{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 30%,rgba(0,0,0,.8) 100%)}
-.reveal-flash{position:absolute;inset:0;opacity:0;pointer-events:none}
-.reveal-flash.pop{animation:flash-pop .55s ease-out}
-@keyframes flash-pop{0%{opacity:0}14%{opacity:.95}100%{opacity:0}}
-.reveal-flash.common{background:radial-gradient(circle,#fff,var(--grey))}
-.reveal-flash.epic{background:radial-gradient(circle,#fff,#8B5CF6)}
-.reveal-flash.legendary{background:radial-gradient(circle,#fff,var(--gold))}
-.reveal-flash.cat{background:radial-gradient(circle,#fff,var(--cat))}
-.reveal-stage{position:relative;display:grid;place-items:center;width:min(320px,82vw)}
-.reveal-glow{position:absolute;inset:-45%;border-radius:50%;filter:blur(44px);opacity:0;animation:glow-in .6s ease-out .8s both}
-.pack{position:relative;width:min(190px,55vw);aspect-ratio:5/7;display:grid;place-items:center;animation:pack-float 2.2s ease-in-out infinite}
-.pack.burst{animation:pack-burst .5s cubic-bezier(.3,.9,.4,1) both}
-@keyframes pack-float{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-10px) rotate(1.5deg)}}
-@keyframes pack-burst{to{transform:scale(1.6);opacity:0}}
-.pack-shell{position:absolute;inset:0;clip-path:var(--facet);background:linear-gradient(155deg,var(--panel),var(--bg2) 60%,#131820);border:2px solid var(--amber-soft);display:grid;place-items:center;box-shadow:0 0 44px -6px rgba(232,163,61,.55)}
-.pack-shell::before{content:"?";font:800 22cqw var(--display);color:rgba(232,163,61,.55)}
-.reveal-card{opacity:0;width:min(230px,68vw)}
-.reveal-card.in{animation:card-slam .7s cubic-bezier(.2,1.4,.3,1) both}
-@keyframes card-slam{
-  0%{opacity:0;transform:scale(.2) rotateY(180deg) rotate(-10deg)}
-  60%{opacity:1;transform:scale(1.08) rotateY(0deg) rotate(2deg)}
-  100%{opacity:1;transform:scale(1) rotateY(0deg) rotate(0deg)}
-}
-.confetti{position:absolute;left:50%;top:50%;width:9px;height:9px;clip-path:var(--facet-sm);opacity:0;pointer-events:none;animation:confetti-burst 1.1s ease-out both;animation-delay:var(--d,0s)}
-@keyframes confetti-burst{
-  0%{opacity:1;transform:translate(-50%,-50%) rotate(0)}
-  100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r))}
-}
-.particle{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:var(--amber-soft);opacity:0;pointer-events:none;animation:particle-float linear infinite;animation-delay:var(--d,0s);animation-duration:var(--dur,3s)}
-@keyframes particle-float{
-  0%{opacity:0;transform:translate(-50%,-50%)}
-  10%{opacity:.85}
-  90%{opacity:.4}
-  100%{opacity:0;transform:translate(calc(-50% + var(--ex)),calc(-50% + var(--ey)))}
-}
-.reveal-label{margin-top:20px;text-align:center;opacity:0}
-.reveal-label.in{animation:pop .5s cubic-bezier(.2,1.2,.4,1) both}
-.reveal-label .rar{font:800 16px var(--display);letter-spacing:.06em;text-transform:uppercase}
-.reveal-label .rar.common{color:var(--ink-soft)}
-.reveal-label .rar.epic{color:#B9A2F0}
-.reveal-label .rar.legendary{color:var(--gold)}
-.reveal-label .rar.cat{color:var(--cat)}
-.reveal-label p{margin:5px 0 0;color:var(--ink-soft);font-size:14.5px}
-.reveal-skip{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--amber);color:#1B2028;border:0;clip-path:var(--facet-sm);padding:13px 28px;font:700 15px var(--body);cursor:pointer;opacity:0;pointer-events:none}
-.reveal-skip.in{opacity:1;pointer-events:auto;transition:opacity .3s ease .2s}
-.reveal-skip:hover{background:var(--amber-soft)}
-@media (max-width:480px){.reveal-stage{width:min(280px,86vw)}}
 
 /* Kaarten (schalen mee met hun breedte) */
 .cw{container-type:inline-size;width:100%;position:relative}
@@ -189,11 +123,11 @@ a{color:var(--amber-soft)}
 .special{font:600 7cqw/1.15 var(--body);border-top:.8cqw solid rgba(0,0,0,.2);padding-top:2cqw}
 .special small{display:none;font-weight:400}
 @container (min-width:180px){.special small{display:block;margin-top:1cqw}}
+.flavor{font:italic 500 6.5cqw/1.2 var(--body);color:#4A4033;opacity:.85}
 .r-common{--rc:#8A98A1;--rbg:linear-gradient(165deg,#fff,#E7ECEF);--art:#DDE4E8}
 .r-epic{--rc:#6C4BC2;--rbg:linear-gradient(140deg,#F3EEFF,#D5C7F7 45%,#F3EEFF 60%,#C4B0F2);--art:linear-gradient(135deg,#B9A2F0,#7F5FD0)}
 .r-legendary{--rc:#B98910;--rbg:linear-gradient(140deg,#FFF6D6,#F1CF6A 45%,#FFF1BE 60%,#E2B83E);--art:linear-gradient(135deg,#F5D97A,#C99A1E)}
 .r-legendary::after{content:"";position:absolute;inset:-50%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-60%);animation:shine 5s ease-in-out infinite;pointer-events:none}
-.r-epic::after{content:"";position:absolute;inset:-50%;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.32) 50%,transparent 58%);transform:translateX(-60%);animation:shine 6.5s ease-in-out infinite;pointer-events:none}
 @keyframes shine{0%,55%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
 .r-cat{--rc:#1F8F8A;--rbg:linear-gradient(165deg,#EAFBF9,#C9EEEA);--art:#A9DDD8}
 .locked{filter:saturate(.15) brightness(.85)}
@@ -240,9 +174,7 @@ dialog::backdrop{background:rgba(10,12,16,.75)}
   .index-page{border-right:0;border-bottom:1px solid rgba(0,0,0,.1);max-height:220px}
 }
 @media (prefers-reduced-motion:reduce){
-  .r-legendary::after,.r-epic::after,.pop,.tile.flip,.glow,.page-body.turning,
-  body::after,.logo-poly,.reveal-rays,.pack,.reveal-overlay.shake,.reveal-flash.pop,
-  .reveal-card.in,.reveal-label.in,.confetti,.particle,.reveal-glow{animation:none}
+  .r-legendary::after,.pop,.tile.flip,.shard,.glow,.page-body.turning{animation:none}
 }
 </style>
 </head>
@@ -384,11 +316,13 @@ function renderCard(c, { locked = false, count = 1 } = {}) {
   const special = c.special_name
     ? `<div class="special">★ ${esc(c.special_name)}${c.special_power ? ` (${esc(c.special_power)})` : ''}<small>${esc(c.special_desc)}</small></div>`
     : '';
+  const flavor = c.flavor_text ? `<div class="flavor">"${esc(c.flavor_text)}"</div>` : '';
   return `<div class="cw">
     ${count > 1 ? `<span class="dupe">×${count}</span>` : ''}
     <div class="card r-${c.rarity}">
       <div class="chead"><span class="cname">${esc(c.name)}</span><span class="hp">HP ${esc(c.hp)}</span></div>
       <div class="art">${art}</div>
+      ${flavor}
       <div class="cfoot"><span>${label}</span><span>ATK ${esc(c.attack)} / DEF ${esc(c.defense)}</span></div>
       ${special}
     </div></div>`;
@@ -399,7 +333,7 @@ function renderMain() {
   app.innerHTML = `
   <div class="wrap wide" id="wrap">
     <header class="top">
-      <span class="brand"><svg class="logo-poly" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><polygon points="12,2 22,8.5 19,20 5,20 2,8.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>POLYGON <em>Card Collection</em></span>
+      <span class="brand">POLYGON <em>Card Collection</em></span>
       <span class="who">${esc(state.name)} <button class="link" id="logout">Uitloggen</button></span>
     </header>
     <nav class="tabs" aria-label="Weergave">
@@ -450,7 +384,7 @@ function renderToday(view) {
     <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart.</p>
     <div id="uploadbox" class="form">
       <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Plak hier je gedeelde Wordle-resultaat"></textarea></label>
-      <label for="word">Het geraden woord <span class="uphint">(in HOOFDLETTERS)</span><input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></label>
+      <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. CRANE"></label>
       <button class="btn" id="go" disabled>Kaart trekken</button>
       <p id="msg" role="alert" class="msg"></p>
     </div>
@@ -484,104 +418,24 @@ function renderToday(view) {
   };
 }
 
-function spawnParticles(container, n) {
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < n; i++) {
-    const p = document.createElement('span');
-    p.className = 'particle';
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 70 + Math.random() * 160;
-    p.style.setProperty('--ex', `${Math.cos(angle) * dist}px`);
-    p.style.setProperty('--ey', `${Math.sin(angle) * dist}px`);
-    p.style.setProperty('--d', `${Math.random() * 2.2}s`);
-    p.style.setProperty('--dur', `${2.4 + Math.random() * 2.2}s`);
-    frag.appendChild(p);
-  }
-  container.appendChild(frag);
-}
-
-function spawnConfetti(container, n) {
-  const colors = ['var(--amber)', 'var(--amber-soft)', '#8B5CF6', 'var(--gold)', '#fff'];
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < n; i++) {
-    const c = document.createElement('span');
-    c.className = 'confetti';
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 90 + Math.random() * 180;
-    c.style.setProperty('--x', `${Math.cos(angle) * dist}px`);
-    c.style.setProperty('--y', `${Math.sin(angle) * dist}px`);
-    c.style.setProperty('--r', `${Math.random() * 720 - 360}deg`);
-    c.style.setProperty('--d', `${Math.random() * .35}s`);
-    c.style.background = colors[i % colors.length];
-    frag.appendChild(c);
-  }
-  container.appendChild(frag);
-}
-
 async function revealCard(res) {
+  const stage = $('#stage');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const rarity = res.rarity;
-  const stageText = res.solved
-    ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[rarity]}-kaart.`
-    : 'Niet opgelost vandaag. Je kreeg een troostkat.';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'reveal-overlay';
-  overlay.innerHTML = `
-    <div class="reveal-vignette"></div>
-    <div class="reveal-flash ${rarity}" id="rvFlash"></div>
-    <div class="reveal-rays" id="rvRays"></div>
-    <div class="reveal-stage">
-      <div class="reveal-glow ${rarity}"></div>
-      <div id="rvParticles"></div>
-      <div id="rvConfetti"></div>
-      <div class="pack" id="rvPack"><div class="pack-shell"></div></div>
-      <div class="reveal-card" id="rvCard">${renderCard(res.card)}</div>
-      <div class="reveal-label" id="rvLabel">
-        <span class="rar ${rarity}">${RARITY_LABEL[rarity]}</span>
-        <p>${res.solved ? `Opgelost in ${res.attempts} ${plural(res.attempts)}.` : 'Niet opgelost vandaag.'}</p>
-      </div>
-    </div>
-    <button class="reveal-skip" id="rvSkip">Verder →</button>`;
-  document.body.appendChild(overlay);
-  document.body.style.overflow = 'hidden';
-  requestAnimationFrame(() => overlay.classList.add('show'));
-
-  const finish = () => {
-    overlay.classList.remove('show');
-    document.body.style.overflow = '';
-    setTimeout(() => overlay.remove(), 300);
-  };
-  // Het resultaat staat ook meteen achter de overlay klaar in de pagina zelf.
-  $('#stage').innerHTML = `<div class="pop">${renderCard(res.card)}</div><p class="result">${stageText}</p>`;
-
-  if (reduce) {
-    $('#rvPack', overlay).hidden = true;
-    $('#rvRays', overlay).remove();
-    $('#rvCard', overlay).classList.add('in');
-    $('#rvLabel', overlay).classList.add('in');
-    $('#rvSkip', overlay).classList.add('in');
-    return new Promise(resolve => { $('#rvSkip', overlay).onclick = () => { finish(); resolve(); }; });
+  if (!reduce) {
+    stage.innerHTML = `<div class="shard-wrap" aria-hidden="true">
+      <div class="glow ${res.rarity}"></div>
+      <div class="shard s3"></div><div class="shard s2"></div><div class="shard"></div>
+    </div>`;
+    await sleep(1500);
+    const pattern = REVEAL_PATTERN[res.rarity];
+    stage.innerHTML = `<div class="tilerow" aria-hidden="true">${[...'POLY'].map((ch, i) =>
+      `<span class="tile flip t-pending" style="--i:${i};--final:${TILE_COLORS[pattern[i]]}">${ch}</span>`).join('')}</div>`;
+    await sleep(1200);
   }
-
-  spawnParticles($('#rvParticles', overlay), 18);
-  await sleep(1400);
-  $('#rvPack', overlay).classList.add('burst');
-  $('#rvFlash', overlay).classList.add('pop');
-  overlay.classList.add('shake');
-  await sleep(140);
-  $('#rvCard', overlay).classList.add('in');
-  if (rarity === 'epic' || rarity === 'legendary') {
-    spawnConfetti($('#rvConfetti', overlay), rarity === 'legendary' ? 28 : 16);
-  }
-  await sleep(650);
-  $('#rvLabel', overlay).classList.add('in');
-  $('#rvSkip', overlay).classList.add('in');
-
-  return new Promise(resolve => {
-    $('#rvSkip', overlay).onclick = () => { finish(); resolve(); };
-    overlay.addEventListener('click', e => { if (e.target === overlay) { finish(); resolve(); } });
-  });
+  const text = res.solved
+    ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[res.rarity]}-kaart.`
+    : 'Niet opgelost vandaag. Je krijgt een troostkat.';
+  stage.innerHTML = `<div class="pop">${renderCard(res.card)}</div><p class="result">${text}</p>`;
 }
 
 // ---------- Tab: Mijn boek ----------
