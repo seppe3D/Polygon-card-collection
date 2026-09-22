@@ -3,47 +3,71 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wordle Kaarten</title>
+<title>Polygon Card Collection</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#E4EAEE; --sleeve:#F6F8F9; --ink:#16252D; --muted:#566872; --line:#C3CED5;
-  --green:#4C8A47; --yellow:#B69B2B; --grey:#787C7E; --gold:#B98910; --cat:#1F8F8A;
+  --bg:#1B2028; --bg2:#232A34; --panel:#262E39; --sleeve:#F4EFE4; --page:#FBF7EE;
+  --ink:#F1EFE9; --ink-soft:#B9C2CC; --muted:#8892A0; --line:#3A4453;
+  --amber:#E8A33D; --amber-soft:#F4C877;
+  --green:#4C8A47; --yellow:#B69B2B; --grey:#6A7482; --gold:#C99A1E; --cat:#2FA79E;
+  --facet:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
+  --facet-sm:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
   --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
   --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);min-height:100vh}
-h1,h2{font-family:var(--display);font-weight:800;line-height:1.1;margin:0 0 8px}
-h1{font-size:34px}
-h2{font-size:26px}
-button,input{font:inherit}
-.wrap{max-width:520px;margin:0 auto;padding:16px 16px 48px}
-.hint{color:var(--muted);margin:0 0 16px;max-width:60ch}
+body{
+  margin:0;color:var(--ink);font:400 16px/1.55 var(--body);min-height:100vh;
+  background:
+    linear-gradient(180deg,rgba(27,32,40,.94),rgba(27,32,40,.98)),
+    var(--bg);
+  background-attachment:fixed;
+  position:relative;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;opacity:.5;pointer-events:none;
+  background-image:
+    linear-gradient(115deg,transparent 48%,rgba(232,163,61,.05) 49%,rgba(232,163,61,.05) 50%,transparent 51%),
+    linear-gradient(25deg,transparent 48%,rgba(255,255,255,.035) 49%,rgba(255,255,255,.035) 50%,transparent 51%);
+  background-size:140px 140px,90px 90px;
+}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.08;margin:0 0 8px;color:#fff}
+h1{font-size:clamp(30px,5vw,46px)}
+h2{font-size:clamp(22px,3vw,30px)}
+button,input,textarea{font:inherit}
+a{color:var(--amber-soft)}
+.wrap{max-width:560px;margin:0 auto;padding:28px 20px 56px}
+.wrap.wide{max-width:1180px}
+.hint{color:var(--ink-soft);margin:0 0 20px;max-width:64ch}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 
 /* Knoppen en formulieren */
-.btn{background:var(--ink);color:#fff;border:0;border-radius:10px;padding:14px 18px;font:600 16px var(--body);min-height:48px;cursor:pointer;width:100%}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.link{background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:15px}
-.form{display:grid;gap:14px;margin:20px 0 6px}
-.form label{display:grid;gap:6px;font-weight:600;font-size:15px}
-.form input,.form textarea{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px;min-height:48px;font-weight:400;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;line-height:1.4;resize:vertical}
+.btn{background:var(--amber);color:#1B2028;border:0;clip-path:var(--facet-sm);padding:15px 20px;font:700 16px var(--body);min-height:50px;cursor:pointer;width:100%;transition:transform .15s ease, background .15s ease}
+.btn:hover:not(:disabled){background:var(--amber-soft);transform:translateY(-1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:15px}
+.link:hover{color:var(--amber-soft)}
+.form{display:grid;gap:16px;margin:24px 0 8px}
+.form label{display:grid;gap:7px;font-weight:600;font-size:15px;color:var(--ink-soft)}
+.form input,.form textarea{border:1px solid var(--line);background:var(--panel);color:var(--ink);clip-path:var(--facet-sm);padding:13px;min-height:50px;font-weight:400;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;line-height:1.5;resize:vertical}
+.form input{font-family:var(--body)}
+.form input:focus,.form textarea:focus{background:#2C3541}
 .msg{margin:0;min-height:1.5em;font-size:15px}
-.msg.err,.err{color:#A02E2E}
-.msg.ok{color:var(--green)}
+.msg.err,.err{color:#F0897E}
+.msg.ok{color:var(--amber-soft)}
 
 /* Wordle-tegels */
-.tile{width:clamp(44px,14vw,60px);aspect-ratio:1;display:grid;place-items:center;border-radius:6px;color:#fff;font:800 clamp(24px,8vw,34px)/1 var(--display)}
+.tile{width:clamp(42px,13vw,58px);aspect-ratio:1;display:grid;place-items:center;clip-path:var(--facet-sm);color:#fff;font:800 clamp(22px,7vw,32px)/1 var(--display)}
 .t-g{background:var(--green)} .t-y{background:var(--yellow)} .t-x{background:var(--grey)}
 .tilerow,.hero{display:flex;gap:6px;justify-content:center}
-.hero{margin:28px 0 22px;justify-content:flex-start}
+.hero{margin:20px 0 24px;justify-content:flex-start}
 .tile.t-pending{background:var(--grey)}
-.tile.flip{animation:flip .55s ease-in-out both;animation-delay:calc(var(--i) * .3s)}
+.tile.flip{animation:flip .55s ease-in-out both;animation-delay:calc(var(--i) * .28s)}
 @keyframes flip{
   0%{transform:rotateX(0)}
   49%{transform:rotateX(90deg);background:var(--grey)}
@@ -52,32 +76,50 @@ button,input{font:inherit}
 }
 
 /* Kopregel en tabs */
-.top{display:flex;justify-content:space-between;align-items:center;padding:8px 0 12px}
-.brand{font:800 20px var(--display)}
-.who{display:flex;gap:4px;align-items:center;color:var(--muted);font-size:14px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--sleeve);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:20px}
-.tabs button{border:0;background:transparent;border-radius:9px;padding:11px;font:600 15px var(--body);color:var(--muted);cursor:pointer;min-height:44px}
-.tabs button[aria-current="page"]{background:var(--ink);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px;gap:12px;flex-wrap:wrap}
+.brand{font:800 22px var(--display);color:#fff;display:flex;align-items:baseline;gap:8px}
+.brand em{font-style:normal;color:var(--amber-soft)}
+.who{display:flex;gap:6px;align-items:center;color:var(--ink-soft);font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:26px}
+.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:12px;font:700 15px var(--body);color:var(--ink-soft);cursor:pointer;min-height:44px}
+.tabs button[aria-current="page"]{background:var(--amber);color:#1B2028}
 
 /* Upload */
-.stage{display:grid;justify-items:center;gap:14px;margin-top:20px}
-.stage .cw{width:min(260px,70vw)}
-.result{margin:0;text-align:center;font-weight:600}
-.pop{animation:pop .45s cubic-bezier(.2,1.2,.4,1)}
+.stage{display:grid;justify-items:center;gap:16px;margin-top:24px}
+.stage .cw{width:min(280px,72vw)}
+.result{margin:0;text-align:center;font-weight:600;color:var(--ink-soft)}
+.pop{animation:pop .5s cubic-bezier(.2,1.2,.4,1)}
 @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Shard-animatie bij het trekken */
+.shard-wrap{position:relative;width:min(220px,60vw);aspect-ratio:5/7;display:grid;place-items:center}
+.shard{position:absolute;inset:0;border:2px solid var(--amber);clip-path:var(--facet);background:linear-gradient(160deg,var(--panel),var(--bg2));animation:spin-settle 1.5s cubic-bezier(.3,.8,.3,1) both}
+.shard.s2{animation-delay:.08s;opacity:.6;border-color:var(--amber-soft)}
+.shard.s3{animation-delay:.16s;opacity:.35}
+@keyframes spin-settle{
+  0%{transform:rotate(0deg) scale(.4);opacity:0}
+  55%{transform:rotate(200deg) scale(1.06);opacity:1}
+  100%{transform:rotate(360deg) scale(1);opacity:0}
+}
+.glow{position:absolute;inset:-30%;border-radius:50%;filter:blur(30px);opacity:0;animation:glow-in .7s ease-out .9s both}
+@keyframes glow-in{from{opacity:0;transform:scale(.6)}to{opacity:.55;transform:scale(1)}}
+.glow.common{background:radial-gradient(circle,var(--grey),transparent 70%)}
+.glow.epic{background:radial-gradient(circle,#8B5CF6,transparent 70%)}
+.glow.legendary{background:radial-gradient(circle,var(--gold),transparent 70%)}
+.glow.cat{background:radial-gradient(circle,var(--cat),transparent 70%)}
 
 /* Kaarten (schalen mee met hun breedte) */
 .cw{container-type:inline-size;width:100%;position:relative}
-.card{position:relative;aspect-ratio:5/7;border-radius:6cqw;padding:5cqw;display:flex;flex-direction:column;gap:3cqw;border:1.4cqw solid var(--rc);background:var(--rbg);color:var(--ink);overflow:hidden;font-size:8cqw;text-align:left}
+.card{position:relative;aspect-ratio:5/7;clip-path:var(--facet);padding:5.5cqw;display:flex;flex-direction:column;gap:3cqw;border:1.6cqw solid var(--rc);background:var(--rbg);color:#241C0F;overflow:hidden;font-size:8cqw;text-align:left}
 .chead{display:flex;justify-content:space-between;align-items:baseline;gap:2cqw;font:800 9cqw/1.05 var(--display)}
 .cname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hp{font:600 7cqw var(--body);white-space:nowrap}
-.art{flex:1;min-height:0;border-radius:3cqw;background:var(--art);display:grid;place-items:center;overflow:hidden;border:.8cqw solid rgba(0,0,0,.12)}
+.hp{font:700 7cqw var(--body);white-space:nowrap}
+.art{flex:1;min-height:0;clip-path:var(--facet-sm);background:var(--art);display:grid;place-items:center;overflow:hidden;border:.8cqw solid rgba(0,0,0,.15)}
 .art img{width:100%;height:100%;object-fit:cover}
-.ptile{width:38cqw;aspect-ratio:1;border-radius:3cqw;display:grid;place-items:center;background:var(--green);color:#fff;font:800 24cqw/1 var(--display)}
-.ptile.cat{background:transparent;font-size:30cqw}
-.cfoot{display:flex;justify-content:space-between;font:600 7cqw var(--body)}
-.special{font:600 7cqw/1.15 var(--body);border-top:.8cqw solid rgba(0,0,0,.18);padding-top:2cqw}
+.ptile{width:38cqw;aspect-ratio:1;clip-path:var(--facet-sm);display:grid;place-items:center;background:rgba(0,0,0,.22);color:#fff;font:800 22cqw/1 var(--display)}
+.ptile.cat{background:transparent;font-size:28cqw}
+.cfoot{display:flex;justify-content:space-between;font:700 7cqw var(--body)}
+.special{font:600 7cqw/1.15 var(--body);border-top:.8cqw solid rgba(0,0,0,.2);padding-top:2cqw}
 .special small{display:none;font-weight:400}
 @container (min-width:180px){.special small{display:block;margin-top:1cqw}}
 .r-common{--rc:#8A98A1;--rbg:linear-gradient(165deg,#fff,#E7ECEF);--art:#DDE4E8}
@@ -86,29 +128,51 @@ button,input{font:inherit}
 .r-legendary::after{content:"";position:absolute;inset:-50%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-60%);animation:shine 5s ease-in-out infinite;pointer-events:none}
 @keyframes shine{0%,55%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
 .r-cat{--rc:#1F8F8A;--rbg:linear-gradient(165deg,#EAFBF9,#C9EEEA);--art:#A9DDD8}
-.locked{filter:grayscale(1);opacity:.5}
+.locked{filter:saturate(.15) brightness(.85)}
 .q{font:800 30cqw/1 var(--display);color:rgba(0,0,0,.28)}
-.dupe{position:absolute;right:-4px;top:-6px;background:var(--ink);color:#fff;border-radius:99px;padding:1px 7px;font:600 12px var(--body);z-index:2}
+.dupe{position:absolute;right:-6px;top:-8px;background:var(--amber);color:#1B2028;clip-path:var(--facet-sm);padding:2px 9px;font:700 12px var(--body);z-index:2}
 
-/* Verzamelboek */
-.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px}
-.chip{flex:none;border:1px solid var(--line);background:var(--sleeve);border-radius:99px;padding:8px 14px;font:600 14px var(--body);cursor:pointer;color:var(--ink);min-height:40px}
-.chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.chip span{opacity:.7;font-weight:400;margin-left:4px}
-.count{color:var(--muted);margin:0 0 12px;font-size:15px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px;background:var(--sleeve);border:1px solid var(--line);border-radius:14px}
-.slot{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;display:block}
+/* Boek */
+.book{background:linear-gradient(160deg,#3B2E20,#241A10);clip-path:var(--facet);padding:14px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.spread{background:var(--page);clip-path:var(--facet-sm);padding:0;display:grid;grid-template-columns:260px 1fr;min-height:520px;position:relative;color:#241C0F}
+.spread::before{content:"";position:absolute;left:260px;top:0;bottom:0;width:20px;margin-left:-10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.15),transparent);pointer-events:none}
+.index-page{padding:26px 20px;border-right:1px solid rgba(0,0,0,.1);overflow-y:auto}
+.index-page h3{color:#241C0F;font-size:18px;margin-bottom:4px}
+.index-page .sub{color:#6B5E4C;font-size:13px;margin-bottom:18px}
+.index-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.index-list button{width:100%;text-align:left;background:none;border:0;padding:10px 10px;cursor:pointer;color:#241C0F;border-radius:0;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 14.5px var(--body)}
+.index-list button:hover{background:rgba(0,0,0,.05)}
+.index-list button[aria-current="page"]{background:var(--amber);color:#1B2028}
+.index-list .frac{font:600 12.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
+.index-list button[aria-current="page"] .frac{color:#1B2028;opacity:.75}
+.page-body{padding:26px 26px 20px;display:flex;flex-direction:column}
+.page-body .pname{font-size:22px;margin-bottom:2px}
+.page-body .pcount{color:#6B5E4C;font-size:14px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;flex:1;align-content:start}
+.slot{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;display:block;transition:transform .15s ease}
+.slot:hover{transform:translateY(-3px)}
 div.slot{cursor:default}
+.pageturn{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid rgba(0,0,0,.1)}
+.pageturn button{background:none;border:1px solid rgba(36,28,15,.25);clip-path:var(--facet-sm);padding:9px 16px;font:700 14px var(--body);cursor:pointer;color:#241C0F}
+.pageturn button:disabled{opacity:.3;cursor:default}
+.pageturn .pnum{font:600 13.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
+.page-body.turning{animation:pageturn .38s ease}
+@keyframes pageturn{0%{opacity:0;transform:perspective(800px) rotateY(-8deg)}100%{opacity:1;transform:none}}
 
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
-dialog::backdrop{background:rgba(22,37,45,.65)}
-.zoombox{width:min(320px,86vw);padding:16px;display:grid;gap:8px;justify-items:center}
+dialog::backdrop{background:rgba(10,12,16,.75)}
+.zoombox{width:min(320px,86vw);padding:16px;display:grid;gap:10px;justify-items:center}
 .zoombox .cw{width:100%}
 .zoombox .link{color:#fff}
-.loading{padding:40px 16px;text-align:center;color:var(--muted)}
+.loading{padding:60px 16px;text-align:center;color:var(--muted)}
 
+@media (max-width:760px){
+  .spread{grid-template-columns:1fr}
+  .spread::before{display:none}
+  .index-page{border-right:0;border-bottom:1px solid rgba(0,0,0,.1);max-height:220px}
+}
 @media (prefers-reduced-motion:reduce){
-  .r-legendary::after,.pop,.tile.flip{animation:none}
+  .r-legendary::after,.pop,.tile.flip,.shard,.glow,.page-body.turning{animation:none}
 }
 </style>
 </head>
@@ -122,8 +186,8 @@ dialog::backdrop{background:rgba(22,37,45,.65)}
 // (Project Settings > API). De anon key mag publiek staan.
 // ---------------------------------------------------------------
 const CONFIG = {
-  SUPABASE_URL: 'https://rmgnkwlmgtfamhioncny.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZ25rd2xtZ3RmYW1oaW9uY255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTM3MTMsImV4cCI6MjEwNTYyOTcxM30.rGXsDOX0Bd42qmnXh3VQm2WyQHPymmdSywnFDNOVnUg'
+  SUPABASE_URL: 'https://JOUW-PROJECT.supabase.co',
+  SUPABASE_ANON_KEY: 'JOUW-ANON-KEY'
 };
 
 const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
@@ -192,9 +256,9 @@ function renderAuth(mode) {
   const reg = mode === 'register';
   app.innerHTML = `
   <main class="wrap">
-    <div class="hero" aria-hidden="true">${tiles('KAART', ['g','y','x','g','g'])}</div>
-    <h1>Wordle Kaarten</h1>
-    <p class="hint">Los de dagelijkse Wordle op, upload je screenshot en verzamel kaarten van je collega's.</p>
+    <div class="hero" aria-hidden="true">${tiles('POLY', ['g','y','x','g'])}</div>
+    <h1>Polygon <em>Card Collection</em></h1>
+    <p class="hint">Los de dagelijkse Wordle op, plak je resultaat en verzamel facetkaarten van je collega's.</p>
     <form id="authform" class="form">
       ${reg ? '<label>Naam<input name="name" required autocomplete="nickname" maxlength="30"></label>' : ''}
       <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
@@ -263,9 +327,9 @@ function renderCard(c, { locked = false, count = 1 } = {}) {
 // ---------- Hoofdscherm ----------
 function renderMain() {
   app.innerHTML = `
-  <div class="wrap">
+  <div class="wrap ${state.tab === 'book' ? 'wide' : ''}" id="wrap">
     <header class="top">
-      <span class="brand">Wordle Kaarten</span>
+      <span class="brand">POLYGON <em>Card Collection</em></span>
       <span class="who">${esc(state.name)} <button class="link" id="logout">Uitloggen</button></span>
     </header>
     <nav class="tabs" aria-label="Weergave">
@@ -279,7 +343,7 @@ function renderMain() {
   </dialog>`;
   $('#logout').onclick = () => sb.auth.signOut();
   document.querySelectorAll('.tabs button').forEach(b => {
-    b.onclick = () => { state.tab = b.dataset.tab; renderView(); };
+    b.onclick = () => { state.tab = b.dataset.tab; renderMain(); };
   });
   const dlg = $('#zoom');
   $('#zclose').onclick = () => dlg.close();
@@ -355,10 +419,15 @@ async function revealCard(res) {
   const stage = $('#stage');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce) {
+    stage.innerHTML = `<div class="shard-wrap" aria-hidden="true">
+      <div class="glow ${res.rarity}"></div>
+      <div class="shard s3"></div><div class="shard s2"></div><div class="shard"></div>
+    </div>`;
+    await sleep(1500);
     const pattern = REVEAL_PATTERN[res.rarity];
-    stage.innerHTML = `<div class="tilerow" aria-hidden="true">${[...'KAART'].map((ch, i) =>
+    stage.innerHTML = `<div class="tilerow" aria-hidden="true">${[...'POLY'].map((ch, i) =>
       `<span class="tile flip t-pending" style="--i:${i};--final:${TILE_COLORS[pattern[i]]}">${ch}</span>`).join('')}</div>`;
-    await sleep(2000);
+    await sleep(1200);
   }
   const text = res.solved
     ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[res.rarity]}-kaart.`
@@ -383,27 +452,45 @@ function renderBook(view) {
   const groups = bookGroups();
   if (!groups.length) { view.innerHTML = '<p class="hint">Er zijn nog geen kaarten in de database.</p>'; return; }
   if (state.page >= groups.length) state.page = 0;
+  drawBook(view, groups, false);
+}
+
+function drawBook(view, groups, animate) {
   const g = groups[state.page];
   const people = groups.filter(x => x.name !== 'Katten');
   const total = people.reduce((n, x) => n + x.cards.length, 0);
   const have = people.reduce((n, x) => n + ownedIn(x), 0);
   const dupes = [...state.owned.values()].reduce((n, v) => n + (v - 1), 0);
 
-  view.innerHTML = `<section>
-    <p class="count">${have} van ${total} collega-kaarten verzameld${dupes ? `, ${dupes} dubbel` : ''}</p>
-    <div class="chips" role="group" aria-label="Boekpagina's">${groups.map((x, i) =>
-      `<button class="chip" data-i="${i}" aria-pressed="${i === state.page}">${esc(x.name)}<span>${ownedIn(x)}/${x.cards.length}</span></button>`).join('')}</div>
-    <div class="grid">${g.cards.map(c => {
-      const n = state.owned.get(c.id) || 0;
-      return n
-        ? `<button class="slot" data-id="${c.id}" aria-label="${esc(c.name)} bekijken">${renderCard(c, { count: n })}</button>`
-        : `<div class="slot">${renderCard(c, { locked: true })}</div>`;
-    }).join('')}</div>
-  </section>`;
+  view.innerHTML = `<div class="book"><div class="spread">
+    <nav class="index-page" aria-label="Collega's">
+      <h3>Verzamelboek</h3>
+      <p class="sub">${have}/${total} kaarten${dupes ? ` · ${dupes} dubbel` : ''}</p>
+      <ul class="index-list">${groups.map((x, i) =>
+        `<li><button data-i="${i}" aria-current="${i === state.page}">${esc(x.name)}<span class="frac">${ownedIn(x)}/${x.cards.length}</span></button></li>`).join('')}</ul>
+    </nav>
+    <div class="page-body${animate ? ' turning' : ''}">
+      <h3 class="pname">${esc(g.name)}</h3>
+      <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
+      <div class="grid">${g.cards.map(c => {
+        const n = state.owned.get(c.id) || 0;
+        return n
+          ? `<button class="slot" data-id="${c.id}" aria-label="${esc(c.name)} bekijken">${renderCard(c, { count: n })}</button>`
+          : `<div class="slot">${renderCard(c, { locked: true })}</div>`;
+      }).join('')}</div>
+      <div class="pageturn">
+        <button id="prevp" ${state.page === 0 ? 'disabled' : ''}>← Vorige</button>
+        <span class="pnum">${state.page + 1} / ${groups.length}</span>
+        <button id="nextp" ${state.page === groups.length - 1 ? 'disabled' : ''}>Volgende →</button>
+      </div>
+    </div>
+  </div></div>`;
 
-  view.querySelectorAll('.chip').forEach(b => {
-    b.onclick = () => { state.page = Number(b.dataset.i); renderBook(view); };
+  view.querySelectorAll('.index-list button').forEach(b => {
+    b.onclick = () => { state.page = Number(b.dataset.i); drawBook(view, groups, true); };
   });
+  $('#prevp', view).onclick = () => { state.page = Math.max(0, state.page - 1); drawBook(view, groups, true); };
+  $('#nextp', view).onclick = () => { state.page = Math.min(groups.length - 1, state.page + 1); drawBook(view, groups, true); };
   view.querySelectorAll('button.slot').forEach(b => {
     b.onclick = () => {
       const card = state.cards.find(c => c.id === Number(b.dataset.id));
