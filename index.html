@@ -9,10 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#1B2028; --bg2:#232A34; --panel:#262E39; --sleeve:#F4EFE4; --page:#FBF7EE;
+  --bg:#14171C; --bg2:#1D2229; --panel:#232932; --sleeve:#F4EFE4; --page:#FBF7EE;
   --ink:#F1EFE9; --ink-soft:#B9C2CC; --muted:#8892A0; --line:#3A4453;
-  --amber:#E8A33D; --amber-soft:#F4C877;
-  --green:#4C8A47; --yellow:#B69B2B; --grey:#6A7482; --gold:#C99A1E; --cat:#2FA79E;
+  /* Wordle-palet: groen (correct), geel (bijna), zwart (basis) + grijs/wit als subtiele basiskleuren */
+  --green:#5DA352; --green-soft:#7FC26F; --yellow:#C9B458; --yellow-soft:#DFCB7C;
+  --wblack:#15181D; --grey:#8B93A0; --grey-soft:#AEB6C0; --white:#F3F1E9;
+  --amber:var(--green); --amber-soft:var(--green-soft);
+  --gold:#C99A1E; --cat:#2FA79E;
   --facet:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);
   --facet-sm:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
   --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
@@ -21,49 +24,56 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;color:var(--ink);font:400 16px/1.55 var(--body);min-height:100vh;
+  margin:0;color:var(--ink);font:400 17px/1.6 var(--body);min-height:100vh;
   background:
-    linear-gradient(180deg,rgba(27,32,40,.94),rgba(27,32,40,.98)),
+    radial-gradient(ellipse 90% 60% at 50% -10%,rgba(93,163,82,.16),transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 110%,rgba(201,180,88,.12),transparent 60%),
+    linear-gradient(180deg,rgba(20,23,28,.95),rgba(20,23,28,.99)),
     var(--bg);
   background-attachment:fixed;
   position:relative;
 }
+/* Gradiënt van kleine bolletjes: dicht bovenaan, vervaagt naar onder toe */
 body::before{
-  content:"";position:fixed;inset:0;z-index:-1;opacity:.5;pointer-events:none;
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-image:
-    linear-gradient(115deg,transparent 48%,rgba(232,163,61,.05) 49%,rgba(232,163,61,.05) 50%,transparent 51%),
-    linear-gradient(25deg,transparent 48%,rgba(255,255,255,.035) 49%,rgba(255,255,255,.035) 50%,transparent 51%);
-  background-size:140px 140px,90px 90px;
+    radial-gradient(circle,rgba(93,163,82,.55) 1.6px,transparent 1.9px),
+    radial-gradient(circle,rgba(201,180,88,.5) 1.6px,transparent 1.9px),
+    radial-gradient(circle,rgba(243,241,233,.22) 1.4px,transparent 1.7px);
+  background-size:54px 54px,74px 74px,34px 34px;
+  background-position:0 0,27px 37px,12px 18px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,.15) 80%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,.15) 80%,transparent 100%);
 }
-h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.08;margin:0 0 8px;color:#fff}
-h1{font-size:clamp(30px,5vw,46px)}
-h2{font-size:clamp(22px,3vw,30px)}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.08;margin:0 0 10px;color:#fff}
+h1{font-size:clamp(32px,5.6vw,54px)}
+h2{font-size:clamp(24px,3.6vw,38px)}
 button,input,textarea{font:inherit}
 a{color:var(--amber-soft)}
 .wrap{max-width:560px;margin:0 auto;padding:28px 20px 56px}
-.wrap.wide{max-width:1180px}
-.col{max-width:640px}
-.hint{color:var(--ink-soft);margin:0 0 20px;max-width:64ch}
+.wrap.wide{max-width:min(1560px,96vw);padding:22px 24px 64px}
+.col{max-width:720px}
+.hint{color:var(--ink-soft);margin:0 0 22px;max-width:72ch;font-size:1.05em}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
 
 /* Knoppen en formulieren */
-.btn{background:var(--amber);color:#1B2028;border:0;clip-path:var(--facet-sm);padding:15px 20px;font:700 16px var(--body);min-height:50px;cursor:pointer;width:100%;transition:transform .15s ease, background .15s ease}
+.btn{background:var(--amber);color:#12160f;border:0;clip-path:var(--facet-sm);padding:18px 24px;font:700 17.5px var(--body);min-height:56px;cursor:pointer;width:100%;transition:transform .15s ease, background .15s ease}
 .btn:hover:not(:disabled){background:var(--amber-soft);transform:translateY(-1px)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.link{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:15px}
+.link{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;padding:10px 6px;font-size:16px}
 .link:hover{color:var(--amber-soft)}
-.form{display:grid;gap:16px;margin:24px 0 8px}
-.form label{display:grid;gap:7px;font-weight:600;font-size:15px;color:var(--ink-soft)}
-.form input,.form textarea{border:1px solid var(--line);background:var(--panel);color:var(--ink);clip-path:var(--facet-sm);padding:13px;min-height:50px;font-weight:400;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;line-height:1.5;resize:vertical}
+.form{display:grid;gap:18px;margin:24px 0 8px}
+.form label{display:grid;gap:7px;font-weight:600;font-size:16px;color:var(--ink-soft)}
+.form input,.form textarea{border:1px solid var(--line);background:var(--panel);color:var(--ink);clip-path:var(--facet-sm);padding:14px;min-height:54px;font-weight:400;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;line-height:1.5;resize:vertical}
 .form input{font-family:var(--body)}
 .form input:focus,.form textarea:focus{background:#2C3541}
-.msg{margin:0;min-height:1.5em;font-size:15px}
+.msg{margin:0;min-height:1.5em;font-size:16px}
 .msg.err,.err{color:#F0897E}
-.msg.ok{color:var(--amber-soft)}
+.msg.ok{color:var(--green-soft)}
 
 /* Wordle-tegels */
-.tile{width:clamp(42px,13vw,58px);aspect-ratio:1;display:grid;place-items:center;clip-path:var(--facet-sm);color:#fff;font:800 clamp(22px,7vw,32px)/1 var(--display)}
+.tile{width:clamp(50px,15vw,70px);aspect-ratio:1;display:grid;place-items:center;clip-path:var(--facet-sm);color:#fff;font:800 clamp(26px,8vw,38px)/1 var(--display)}
 .t-g{background:var(--green)} .t-y{background:var(--yellow)} .t-x{background:var(--grey)}
 .tilerow,.hero{display:flex;gap:6px;justify-content:center}
 .hero{margin:20px 0 24px;justify-content:flex-start}
@@ -77,29 +87,32 @@ a{color:var(--amber-soft)}
 }
 
 /* Kopregel en tabs */
-.top{display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px;gap:12px;flex-wrap:wrap}
-.brand{font:800 22px var(--display);color:#fff;display:flex;align-items:baseline;gap:8px}
+.top{display:flex;justify-content:space-between;align-items:center;padding:6px 0 22px;gap:12px;flex-wrap:wrap}
+.brand{font:800 26px var(--display);color:#fff;display:flex;align-items:baseline;gap:8px}
 .brand em{font-style:normal;color:var(--amber-soft)}
-.who{display:flex;gap:6px;align-items:center;color:var(--ink-soft);font-size:14px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:26px}
-.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:12px 6px;font:700 14px var(--body);color:var(--ink-soft);cursor:pointer;min-height:44px}
-.tabs button[aria-current="page"]{background:var(--amber);color:#1B2028}
+.topright{display:flex;gap:12px;align-items:center}
+.coinpill{display:flex;align-items:center;gap:6px;background:var(--wblack);border:1px solid var(--line);color:var(--yellow-soft);font:700 15px var(--body);padding:9px 16px;clip-path:var(--facet-sm);white-space:nowrap}
+.avbtn{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background-color:var(--panel);background-size:cover;background-position:center;color:#fff;font:700 17px var(--body);cursor:pointer;display:grid;place-items:center;padding:0;transition:border-color .15s ease,transform .15s ease}
+.avbtn:hover{border-color:var(--green-soft);transform:translateY(-1px)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--wblack);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:30px}
+.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:15px 6px;font:700 15.5px var(--body);color:var(--ink-soft);cursor:pointer;min-height:50px}
+.tabs button[aria-current="page"]{background:var(--yellow);color:#15181D}
 
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
-.today-grid{display:grid;gap:32px;align-items:start}
+.today-grid{display:grid;gap:44px;align-items:start}
 .today-grid .col{max-width:none}
 @media (min-width:860px){
-  .today-grid{grid-template-columns:1fr 1fr}
+  .today-grid{grid-template-columns:1fr 1.15fr}
 }
 
 /* Upload / stage */
-.stage{position:relative;display:grid;justify-items:center;gap:16px;margin-top:24px;min-height:280px;align-content:start}
-.stage .cw{width:min(280px,72vw)}
-.stage-placeholder{color:var(--muted);text-align:center;padding:48px 20px;border:1.5px dashed var(--line);border-radius:18px;width:100%;font-size:14.5px}
-.result{margin:0;text-align:center;font-weight:600;color:var(--ink-soft);max-width:52ch}
+.stage{position:relative;display:grid;justify-items:center;gap:20px;margin-top:24px;min-height:380px;align-content:start}
+.stage .cw{width:min(440px,90vw)}
+.stage-placeholder{color:var(--muted);text-align:center;padding:64px 24px;border:1.5px dashed var(--line);border-radius:18px;width:100%;font-size:16px}
+.result{margin:0;text-align:center;font-weight:600;color:var(--ink-soft);max-width:56ch;font-size:1.15em}
 
 /* Shard-animatie + zotte pack-opening */
-.shard-wrap{position:relative;width:min(220px,60vw);aspect-ratio:5/7;display:grid;place-items:center}
+.shard-wrap{position:relative;width:min(320px,76vw);aspect-ratio:5/7;display:grid;place-items:center}
 .shard{position:absolute;inset:0;border:2px solid var(--amber);clip-path:var(--facet);background:linear-gradient(160deg,var(--panel),var(--bg2));animation:spin-settle 1.5s cubic-bezier(.3,.8,.3,1) both}
 .shard.s2{animation-delay:.08s;opacity:.6;border-color:var(--amber-soft)}
 .shard.s3{animation-delay:.16s;opacity:.35}
@@ -147,22 +160,24 @@ a{color:var(--amber-soft)}
   background:var(--rbg);color:#241C0F;overflow:hidden}
 .art{position:absolute;inset:0;background:var(--art);display:grid;place-items:center;overflow:hidden}
 .art img{width:100%;height:100%;object-fit:cover;display:block}
-.chead{position:absolute;top:0;left:0;right:0;padding:4.4cqw 6cqw 5cqw;display:flex;justify-content:space-between;align-items:flex-start;gap:2cqw;
-  background:linear-gradient(180deg,rgba(0,0,0,.68),rgba(0,0,0,0))}
-.cname{color:#fff;font:800 7cqw/1.16 var(--display);text-shadow:0 1px 4px rgba(0,0,0,.7);
+.chead{position:absolute;top:0;left:0;right:0;padding:4.4cqw 6cqw 6cqw;display:flex;justify-content:space-between;align-items:flex-start;gap:2cqw;
+  background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.72) 70%,rgba(255,255,255,0));
+  backdrop-filter:blur(9px) saturate(1.15);-webkit-backdrop-filter:blur(9px) saturate(1.15)}
+.cname{color:#141414;font:800 7cqw/1.16 var(--display);text-shadow:none;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;max-width:75%}
 .cname.xl{font-size:6cqw}
 .cname.xxl{font-size:5cqw}
-.hp{color:#fff;font:700 5.6cqw var(--body);white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.hp{color:#141414;font:700 5.6cqw var(--body);white-space:nowrap;text-shadow:none}
 .ptile{width:38cqw;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.22);color:#fff;font:800 22cqw/1 var(--display)}
 .ptile.cat{background:transparent;font-size:28cqw}
-.cfoot{position:absolute;left:0;right:0;bottom:0;padding:4cqw 6cqw 5cqw;display:flex;flex-direction:column;gap:1.6cqw;color:#fff;
-  background:linear-gradient(0deg,rgba(0,0,0,.82) 15%,rgba(0,0,0,.35) 65%,transparent)}
+.cfoot{position:absolute;left:0;right:0;bottom:0;padding:4.5cqw 6cqw 5cqw;display:flex;flex-direction:column;gap:1.8cqw;color:#141414;
+  background:linear-gradient(0deg,rgba(255,255,255,.78) 40%,rgba(255,255,255,.78) 60%,rgba(255,255,255,0));
+  backdrop-filter:blur(9px) saturate(1.15);-webkit-backdrop-filter:blur(9px) saturate(1.15)}
 .cfoot .row1{display:flex;justify-content:space-between;font:700 6cqw var(--body)}
-.special{font:600 5.6cqw/1.2 var(--body);border-top:1px solid rgba(255,255,255,.3);padding-top:1.6cqw}
-.special small{display:none;font-weight:400;color:rgba(255,255,255,.82)}
+.special{font:600 5.6cqw/1.2 var(--body);color:#141414;border-top:1px solid rgba(0,0,0,.22);padding-top:1.8cqw}
+.special small{display:none;font-weight:500;color:rgba(20,20,20,.78)}
 @container (min-width:180px){.special small{display:block;margin-top:1.5cqw}}
-.flavor{font:italic 500 5.8cqw/1.25 var(--body);color:rgba(255,255,255,.85)}
+.flavor{font:italic 500 5.8cqw/1.25 var(--body);color:rgba(20,20,20,.78)}
 .r-common{--rc:#8A98A1;--rbg:linear-gradient(165deg,#fff,#E7ECEF);--art:#DDE4E8}
 .r-epic{--rc:#7C4FE0;--rbg:linear-gradient(140deg,#F3EEFF,#D5C7F7 45%,#F3EEFF 60%,#C4B0F2);--art:linear-gradient(135deg,#B9A2F0,#7F5FD0)}
 .r-legendary{--rc:#D9A61C;--rbg:linear-gradient(140deg,#FFF6D6,#F1CF6A 45%,#FFF1BE 60%,#E2B83E);--art:linear-gradient(135deg,#F5D97A,#C99A1E)}
@@ -178,57 +193,66 @@ a{color:var(--amber-soft)}
 .r-cat{--rc:#1F8F8A;--rbg:linear-gradient(165deg,#EAFBF9,#C9EEEA);--art:#A9DDD8}
 .locked{filter:saturate(.15) brightness(.85)}
 .q{font:800 30cqw/1 var(--display);color:rgba(0,0,0,.28)}
-.dupe{position:absolute;right:-6px;top:-8px;background:var(--amber);color:#1B2028;clip-path:var(--facet-sm);padding:2px 9px;font:700 12px var(--body);z-index:2}
+.dupe{position:absolute;right:-6px;top:-8px;background:var(--yellow);color:#15181D;clip-path:var(--facet-sm);padding:2px 9px;font:700 12px var(--body);z-index:2}
 
 /* Boek */
-.book{background:linear-gradient(160deg,#3B2E20,#241A10);clip-path:var(--facet);padding:14px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
-.spread{background:var(--page);clip-path:var(--facet-sm);padding:0;display:grid;grid-template-columns:260px 1fr;min-height:520px;position:relative;color:#241C0F}
-.spread::before{content:"";position:absolute;left:260px;top:0;bottom:0;width:20px;margin-left:-10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.15),transparent);pointer-events:none}
-.index-page{padding:26px 20px;border-right:1px solid rgba(0,0,0,.1);overflow-y:auto}
-.index-page h3{color:#241C0F;font-size:18px;margin-bottom:4px}
-.index-page .sub{color:#6B5E4C;font-size:13px;margin-bottom:18px}
+.book{background:linear-gradient(160deg,#3B2E20,#241A10);clip-path:var(--facet);padding:16px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
+.spread{background:var(--page);clip-path:var(--facet-sm);padding:0;display:grid;grid-template-columns:300px 1fr;min-height:620px;position:relative;color:#241C0F}
+.spread::before{content:"";position:absolute;left:300px;top:0;bottom:0;width:20px;margin-left:-10px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.15),transparent);pointer-events:none}
+.index-page{padding:30px 22px;border-right:1px solid rgba(0,0,0,.1);overflow-y:auto}
+.index-page h3{color:#241C0F;font-size:21px;margin-bottom:4px}
+.index-page .sub{color:#6B5E4C;font-size:14px;margin-bottom:20px}
 .index-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.index-list button{width:100%;text-align:left;background:none;border:0;padding:10px 10px;cursor:pointer;color:#241C0F;border-radius:0;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 14.5px var(--body)}
+.index-list button{width:100%;text-align:left;background:none;border:0;padding:12px 12px;cursor:pointer;color:#241C0F;border-radius:0;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 16px var(--body)}
 .index-list button:hover{background:rgba(0,0,0,.05)}
-.index-list button[aria-current="page"]{background:var(--amber);color:#1B2028}
-.index-list .frac{font:600 12.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
-.index-list button[aria-current="page"] .frac{color:#1B2028;opacity:.75}
-.page-body{padding:26px 26px 20px;display:flex;flex-direction:column}
-.page-body .pname{font-size:22px;margin-bottom:2px}
-.page-body .pcount{color:#6B5E4C;font-size:14px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;flex:1;align-content:start}
+.index-list button[aria-current="page"]{background:var(--yellow);color:#15181D}
+.index-list .frac{font:600 13.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
+.index-list button[aria-current="page"] .frac{color:#15181D;opacity:.75}
+.page-body{padding:30px 30px 22px;display:flex;flex-direction:column}
+.page-body .pname{font-size:26px;margin-bottom:2px}
+.page-body .pcount{color:#6B5E4C;font-size:15px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;flex:1;align-content:start}
 .slot{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;display:block;transition:transform .15s ease}
 .slot:hover{transform:translateY(-3px)}
-div.slot{cursor:default}
-.pageturn{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid rgba(0,0,0,.1)}
-.pageturn button{background:none;border:1px solid rgba(36,28,15,.25);clip-path:var(--facet-sm);padding:9px 16px;font:700 14px var(--body);cursor:pointer;color:#241C0F}
+.pageturn{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.1)}
+.pageturn button{background:none;border:1px solid rgba(36,28,15,.25);clip-path:var(--facet-sm);padding:10px 18px;font:700 15px var(--body);cursor:pointer;color:#241C0F}
 .pageturn button:disabled{opacity:.3;cursor:default}
-.pageturn .pnum{font:600 13.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
+.pageturn .pnum{font:600 14.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
 .page-body.turning{animation:pageturn .38s ease}
 @keyframes pageturn{0%{opacity:0;transform:perspective(800px) rotateY(-8deg)}100%{opacity:1;transform:none}}
 
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
-dialog::backdrop{background:rgba(10,12,16,.75)}
-.zoombox{width:min(320px,86vw);padding:16px;display:grid;gap:10px;justify-items:center}
+dialog::backdrop{background:rgba(10,12,16,.78)}
+.zoombox{width:min(440px,92vw);padding:18px;display:grid;gap:12px;justify-items:center;animation:zoom-in .22s ease both}
+@keyframes zoom-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 .zoombox .cw{width:100%}
 .zoombox .link{color:#fff}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
 
+/* Account-instellingen modal (naam/e-mail/wachtwoord/profielfoto) */
+.accbox{width:min(420px,92vw);padding:26px;display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet);animation:zoom-in .2s ease both}
+.accbox h2{margin-bottom:4px}
+.photorow{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.photopreview{width:64px;height:64px;border-radius:50%;background-color:var(--bg2);background-size:cover;background-position:center;border:2px solid var(--line);color:#fff;display:grid;place-items:center;font:700 20px var(--body);flex-shrink:0}
+.accbox .rowbtns{display:flex;gap:12px;margin-top:6px}
+.accbox .rowbtns .btn{width:auto;flex:1}
+.accbox .link.danger{color:#F0897E}
+
 /* Account-tab: 3D-personage + shop */
-.acc-grid{display:grid;gap:24px;align-items:start}
-@media (min-width:820px){.acc-grid{grid-template-columns:340px 1fr}}
+.acc-grid{display:grid;gap:28px;align-items:start}
+@media (min-width:820px){.acc-grid{grid-template-columns:380px 1fr}}
 .avatar3d{width:100%;aspect-ratio:3/4;background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .avatar3d canvas{display:block;width:100%;height:100%}
-.wallet{margin:12px 0 0;text-align:center;font:700 15px var(--body);color:var(--amber-soft)}
-.acc-controls{display:flex;flex-direction:column;gap:22px}
-.opt-group h4{margin:0 0 10px;font:700 14px var(--body);color:var(--ink-soft)}
+.wallet{margin:12px 0 0;text-align:center;font:700 15px var(--body);color:var(--yellow-soft)}
+.acc-controls{display:flex;flex-direction:column;gap:24px}
+.opt-group h4{margin:0 0 10px;font:700 15px var(--body);color:var(--ink-soft)}
 .swatches{display:flex;flex-wrap:wrap;gap:12px 10px}
-.swatch{width:38px;height:38px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;background:var(--sw,#888);position:relative;display:grid;place-items:center;font-size:15px}
-.swatch.active{border-color:var(--amber)}
+.swatch{width:42px;height:42px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;background:var(--sw,#888);position:relative;display:grid;place-items:center;font-size:16px}
+.swatch.active{border-color:var(--yellow)}
 .swatch.locked{opacity:.55}
 .styleopts{display:flex;flex-wrap:wrap;gap:8px}
-.styleopts button{background:var(--panel);border:1px solid var(--line);color:var(--ink-soft);clip-path:var(--facet-sm);padding:9px 15px;font:600 13.5px var(--body);cursor:pointer}
-.styleopts button.active{background:var(--amber);color:#1B2028;border-color:var(--amber)}
+.styleopts button{background:var(--panel);border:1px solid var(--line);color:var(--ink-soft);clip-path:var(--facet-sm);padding:10px 16px;font:600 14.5px var(--body);cursor:pointer}
+.styleopts button.active{background:var(--amber);color:#12160f;border-color:var(--amber)}
 .styleopts button.locked{opacity:.6}
 
 @media (max-width:760px){
@@ -277,7 +301,12 @@ const PARTICLE_COLORS = {
   cat: ['#2FA79E', '#8fe0da']
 };
 
-const state = { session: null, cards: [], owned: new Map(), play: null, name: '', tab: 'today', page: 0 };
+const state = { session: null, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, wallet: 0, tab: 'today', page: 0 };
+
+// Werkt alle plekken bij die het polycoins-saldo tonen (topbalk + account-tab)
+function syncCoinUI() {
+  document.querySelectorAll('[data-coin]').forEach(el => { el.textContent = state.wallet; });
+}
 
 const todayBrussels = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' });
 const tiles = (word, cls) => [...word].map((ch, i) => `<span class="tile t-${cls[i]}">${ch}</span>`).join('');
@@ -310,18 +339,21 @@ async function route() {
 
 async function loadData() {
   const uid = state.session.user.id;
-  const [cards, mine, play, prof] = await Promise.all([
+  const [cards, mine, play, prof, wallet] = await Promise.all([
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
     sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
-    sb.from('profiles').select('display_name').eq('id', uid).maybeSingle()
+    sb.from('profiles').select('display_name, avatar_url').eq('id', uid).maybeSingle(),
+    sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle()
   ]);
-  for (const r of [cards, mine, play, prof]) if (r.error) throw new Error(r.error.message);
+  for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
   state.cards = cards.data;
   state.owned = new Map();
   for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
   state.play = play.data;
   state.name = prof.data?.display_name || state.session.user.email.split('@')[0];
+  state.avatarUrl = prof.data?.avatar_url || null;
+  state.wallet = wallet.data?.polycoins || 0;
 }
 
 // ---------- Inloggen ----------
@@ -405,11 +437,16 @@ function renderCard(c, { locked = false, count = 1 } = {}) {
 
 // ---------- Hoofdscherm ----------
 function renderMain() {
+  const initial = esc((state.name || '?').trim().charAt(0).toUpperCase());
+  const avStyle = state.avatarUrl ? ` style="background-image:url('${esc(state.avatarUrl)}')"` : '';
   app.innerHTML = `
   <div class="wrap wide" id="wrap">
     <header class="top">
       <span class="brand">POLYGON <em>Card Collection</em></span>
-      <span class="who">${esc(state.name)} <button class="link" id="logout">Uitloggen</button></span>
+      <div class="topright">
+        <span class="coinpill">🪙 <span data-coin>${state.wallet}</span></span>
+        <button class="avbtn" id="openAccount" aria-label="Account instellingen"${avStyle}>${state.avatarUrl ? '' : initial}</button>
+      </div>
     </header>
     <nav class="tabs" aria-label="Weergave">
       <button data-tab="today">Vandaag</button>
@@ -420,8 +457,9 @@ function renderMain() {
   </div>
   <dialog id="zoom" aria-label="Kaart bekijken">
     <div class="zoombox"><div id="zcard"></div><button class="link" id="zclose">Sluiten</button></div>
-  </dialog>`;
-  $('#logout').onclick = () => sb.auth.signOut();
+  </dialog>
+  <dialog id="accModal" aria-label="Accountinstellingen"></dialog>`;
+  $('#openAccount').onclick = () => openAccountModal();
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => { teardownAvatar3D(); state.tab = b.dataset.tab; renderMain(); };
   });
@@ -429,6 +467,104 @@ function renderMain() {
   $('#zclose').onclick = () => dlg.close();
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
   renderView();
+}
+
+// ---------- Account-bolletje: naam, e-mail, wachtwoord, profielfoto ----------
+function resizeImageToDataUrl(file, maxSize = 200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Foto kon niet gelezen worden.'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Ongeldige afbeelding.'));
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', .85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openAccountModal() {
+  const dlg = $('#accModal');
+  let pendingPhoto = state.avatarUrl;
+  const renderBox = () => {
+    const initial = esc((state.name || '?').trim().charAt(0).toUpperCase());
+    dlg.innerHTML = `<div class="accbox">
+      <h2>Account</h2>
+      <p class="hint">Pas je naam, e-mail, wachtwoord of profielfoto aan.</p>
+      <div class="photorow">
+        <div class="photopreview" id="photoPreview" style="${pendingPhoto ? `background-image:url('${esc(pendingPhoto)}')` : ''}">${pendingPhoto ? '' : initial}</div>
+        <div>
+          <input type="file" id="photoInput" accept="image/*" class="sr" />
+          <button type="button" class="link" id="photoBtn">Foto kiezen…</button>
+        </div>
+      </div>
+      <form id="accForm" class="form">
+        <label>Naam<input name="name" value="${esc(state.name)}" required maxlength="30"></label>
+        <label>E-mail<input name="email" type="email" value="${esc(state.session.user.email)}" required></label>
+        <label>Nieuw wachtwoord<input name="password" type="password" minlength="6" autocomplete="new-password" placeholder="Laat leeg om te behouden"></label>
+        <p id="accSaveMsg" role="alert" class="msg"></p>
+        <div class="rowbtns">
+          <button type="button" class="link" id="accCancel">Annuleren</button>
+          <button class="btn" type="submit">Opslaan</button>
+        </div>
+      </form>
+      <button type="button" class="link danger" id="accLogout">Uitloggen</button>
+    </div>`;
+    $('#accCancel').onclick = () => dlg.close();
+    $('#photoBtn').onclick = () => $('#photoInput').click();
+    $('#photoInput').onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        pendingPhoto = await resizeImageToDataUrl(file);
+        renderBox();
+      } catch (err) {
+        $('#accSaveMsg').className = 'msg err'; $('#accSaveMsg').textContent = err.message;
+      }
+    };
+    $('#accLogout').onclick = () => sb.auth.signOut();
+    $('#accForm').onsubmit = async e => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const msg = $('#accSaveMsg');
+      const btn = e.target.querySelector('button[type=submit]');
+      msg.className = 'msg'; msg.textContent = 'Opslaan…'; btn.disabled = true;
+      try {
+        const name = f.get('name').trim();
+        const email = f.get('email').trim();
+        const password = f.get('password');
+        if (name !== state.name || pendingPhoto !== state.avatarUrl) {
+          const { error } = await sb.from('profiles').update({ display_name: name, avatar_url: pendingPhoto }).eq('id', state.session.user.id);
+          if (error) throw error;
+        }
+        const authUpdates = {};
+        if (email !== state.session.user.email) authUpdates.email = email;
+        if (password) authUpdates.password = password;
+        if (Object.keys(authUpdates).length) {
+          const { error } = await sb.auth.updateUser(authUpdates);
+          if (error) throw error;
+        }
+        state.name = name;
+        state.avatarUrl = pendingPhoto;
+        msg.className = 'msg ok';
+        msg.textContent = authUpdates.email ? 'Opgeslagen! Bevestig je nieuwe e-mailadres via de mail die we stuurden.' : 'Opgeslagen!';
+        setTimeout(() => { dlg.close(); renderMain(); }, authUpdates.email ? 1600 : 500);
+      } catch (err) {
+        msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false;
+      }
+    };
+  };
+  renderBox();
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }, { once: true });
+  dlg.showModal();
 }
 
 function renderView() {
@@ -494,6 +630,9 @@ function renderToday(view) {
       state.play = { solved: data.solved, attempts: data.attempts, card_id: data.card.id, play_date: todayBrussels() };
       if (!data.isDuplicate) {
         state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
+      } else if (data.coinsEarned) {
+        state.wallet += data.coinsEarned;
+        syncCoinUI();
       }
       $('#uploadbox').hidden = true;
       await revealCard(data);
@@ -583,9 +722,7 @@ function drawBook(view, groups, animate) {
       <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
       <div class="grid">${g.cards.map(c => {
         const n = state.owned.get(c.id) || 0;
-        return n
-          ? `<button class="slot" data-id="${c.id}" aria-label="${esc(c.name)} bekijken">${renderCard(c, { count: n })}</button>`
-          : `<div class="slot">${renderCard(c, { locked: true })}</div>`;
+        return `<button class="slot" data-id="${c.id}" aria-label="${n ? esc(c.name) + ' bekijken' : 'Nog niet verzameld'}">${renderCard(c, n ? { count: n } : { locked: true })}</button>`;
       }).join('')}</div>
       <div class="pageturn">
         <button id="prevp" ${state.page === 0 ? 'disabled' : ''}>← Vorige</button>
@@ -603,7 +740,8 @@ function drawBook(view, groups, animate) {
   view.querySelectorAll('button.slot').forEach(b => {
     b.onclick = () => {
       const card = state.cards.find(c => c.id === Number(b.dataset.id));
-      $('#zcard').innerHTML = renderCard(card, { count: state.owned.get(card.id) || 1 });
+      const n = state.owned.get(card.id) || 0;
+      $('#zcard').innerHTML = renderCard(card, n ? { count: n } : { locked: true });
       $('#zoom').showModal();
     };
   });
@@ -625,7 +763,6 @@ let avatarState = null;
 let accConfig = null;
 let shopItems = [];
 let ownedItemIds = new Set();
-let walletBalance = 0;
 
 function renderAccount(view) {
   view.innerHTML = `<section class="col" style="max-width:none">
@@ -634,7 +771,7 @@ function renderAccount(view) {
     <div class="acc-grid">
       <div>
         <div id="avatar3d" class="avatar3d" aria-label="3D-voorbeeld van je personage"></div>
-        <p class="wallet">🪙 <span id="coinCount">…</span> polycoins</p>
+        <p class="wallet">🪙 <span data-coin>${state.wallet}</span> polycoins</p>
       </div>
       <div class="acc-controls" id="accControls"><p class="hint">Laden…</p></div>
     </div>
@@ -653,7 +790,8 @@ async function initAccountTab() {
   accConfig = (avatarRow.data && avatarRow.data.config && Object.keys(avatarRow.data.config).length)
     ? avatarRow.data.config
     : { gender: 'v', hairstyle: 'short', hairColor: FREE_HAIR[0], skinColor: FREE_SKIN[0], clothingColor: FREE_CLOTHES[0], glasses: false, accessory: null };
-  walletBalance = walletRow.data?.polycoins || 0;
+  state.wallet = walletRow.data?.polycoins || 0;
+  syncCoinUI();
   shopItems = items.data || [];
   ownedItemIds = new Set((inv.data || []).map(r => r.item_id));
 
@@ -845,7 +983,7 @@ function drawAccountControls() {
     <button class="btn" id="saveAvatar">Personage opslaan</button>
     <p id="accMsg" class="msg" role="alert"></p>
   `;
-  const coinEl = $('#coinCount'); if (coinEl) coinEl.textContent = walletBalance;
+  syncCoinUI();
 
   el.querySelectorAll('.styleopts button[data-set]').forEach(btn => {
     btn.onclick = async () => {
@@ -909,8 +1047,9 @@ async function tryBuy(itemId) {
       throw new Error(errText);
     }
     ownedItemIds.add(itemId);
-    walletBalance = data.newBalance;
-    msg.className = 'msg ok'; msg.textContent = `Gekocht! Nieuw saldo: ${walletBalance} polycoins.`;
+    state.wallet = data.newBalance;
+    syncCoinUI();
+    msg.className = 'msg ok'; msg.textContent = `Gekocht! Nieuw saldo: ${state.wallet} polycoins.`;
     drawAccountControls();
   } catch (err) {
     msg.className = 'msg err'; msg.textContent = err.message;
