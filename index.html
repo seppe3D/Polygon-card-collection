@@ -229,6 +229,18 @@ a{color:var(--amber-soft)}
 .friend-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:10px 14px}
 .friend-av{width:34px;height:34px;border-radius:50%;background-color:var(--bg2);background-size:cover;background-position:center;display:grid;place-items:center;font:700 14px var(--body);color:#fff;flex-shrink:0}
 .friend-name{flex:1;font-weight:600}
+.friend-open{flex:1;display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.friend-open:hover .friend-name{color:var(--green-soft)}
+.friend-more{color:var(--muted);font-size:13.5px;font-weight:600}
+.link.danger{color:#F0897E}
+.tab-badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:#E0584B;color:#fff;font:700 12px/1 var(--body);vertical-align:1px}
+.tab-badge[hidden]{display:none}
+.accbox.statbox{width:min(620px,94vw);max-height:90vh;overflow-y:auto}
+.statbox-head{display:flex;align-items:center;gap:14px}
+.statbox-head h2{margin:0}
+.statbox-head .friend-av{width:48px;height:48px;font-size:19px}
+.statbox .stat-cards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.statbox .stat-num{font-size:32px}
 
 /* Traden */
 .tselect{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);clip-path:var(--facet-sm);padding:13px;min-height:50px;font:16px var(--body)}
@@ -273,8 +285,7 @@ a{color:var(--amber-soft)}
 .page-body .pname{font-size:26px;margin-bottom:2px}
 .page-body .pcount{color:#6B5E4C;font-size:15px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;flex:1;align-content:start}
-.slot{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit;display:block;transition:transform .15s ease}
-.slot:hover{transform:translateY(-3px)}
+.slot{display:block}
 .pageturn{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.1)}
 .pageturn button{background:none;border:1px solid rgba(36,28,15,.25);clip-path:var(--facet-sm);padding:10px 18px;font:700 15px var(--body);cursor:pointer;color:#241C0F}
 .pageturn button:disabled{opacity:.3;cursor:default}
@@ -284,24 +295,8 @@ a{color:var(--amber-soft)}
 
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
 dialog::backdrop{background:rgba(10,12,16,.78)}
-.zoombox{width:min(480px,92vw);padding:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;justify-items:center;animation:zoom-in .22s ease both}
 @keyframes zoom-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
-.zoombox .link{color:#fff}
-.zoomhint{color:var(--ink-soft);font-size:14px;text-align:center;margin:0}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
-
-/* 3D-draaibare kaart (voor- en achterkant, sleep om te roteren) */
-.flip-wrap{width:100%;perspective:1400px}
-.flip-card{position:relative;width:100%;aspect-ratio:5/7;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.8,.3,1);cursor:grab;touch-action:none;will-change:transform}
-.flip-card.dragging{transition:none;cursor:grabbing}
-.flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.flip-face.back{transform:rotateY(180deg)}
-.cardback{position:relative;aspect-ratio:5/7;border-radius:6.5cqw;border:2.2cqw solid var(--rc,var(--grey));
-  background:radial-gradient(circle at 50% 40%,#1c2620,#0d100c 75%);
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.1), 0 10px 26px -10px rgba(0,0,0,.65);
-  display:grid;place-items:center;overflow:hidden}
-.cardback img{width:62%;height:auto;display:block;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
-.zoombox .cw{width:100%}
 
 /* Account-instellingen modal (naam/e-mail/wachtwoord/profielfoto) */
 .accbox{width:min(420px,92vw);padding:26px;display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet);animation:zoom-in .2s ease both}
@@ -353,6 +348,12 @@ const CONFIG = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZ25rd2xtZ3RmYW1oaW9uY255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNTM3MTMsImV4cCI6MjEwNTYyOTcxM30.rGXsDOX0Bd42qmnXh3VQm2WyQHPymmdSywnFDNOVnUg'
 };
 
+// Info uit de link van een wachtwoord-reset-mail. Uitlezen vóór supabase-js
+// de URL opkuist; zo weten we zeker dat we het resetformulier moeten tonen.
+const URL_HASH = new URLSearchParams(location.hash.slice(1));
+const IS_RECOVERY_LINK = URL_HASH.get('type') === 'recovery';
+let authLinkError = URL_HASH.get('error_description') || new URLSearchParams(location.search).get('error_description');
+
 const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 const app = document.getElementById('app');
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -374,7 +375,7 @@ const PARTICLE_COLORS = {
   cat: ['#2FA79E', '#8fe0da']
 };
 
-const state = { session: null, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, tab: 'today', page: 0 };
+const state = { session: null, recovery: IS_RECOVERY_LINK, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, incomingRequests: 0, tab: 'today', page: 0 };
 
 // Werkt alle plekken bij die het polycoins-saldo tonen (topbalk + account-tab)
 function syncCoinUI() {
@@ -389,7 +390,12 @@ const plural = n => n === 1 ? 'poging' : 'pogingen';
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   state.session = session;
-  sb.auth.onAuthStateChange((_event, s) => {
+  sb.auth.onAuthStateChange((event, s) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      state.session = s; state.recovery = true;
+      renderResetPassword();
+      return;
+    }
     const changed = s?.user?.id !== state.session?.user?.id;
     state.session = s;
     if (changed) route();
@@ -398,7 +404,13 @@ async function init() {
 }
 
 async function route() {
-  if (!state.session) { renderAuth('login'); return; }
+  if (!state.session) {
+    if (state.recovery && !authLinkError) authLinkError = 'De resetlink is ongeldig of verlopen.';
+    state.recovery = false;
+    renderAuth('login');
+    return;
+  }
+  if (state.recovery) { renderResetPassword(); return; }
   app.innerHTML = '<p class="loading">Laden…</p>';
   try {
     await loadData();
@@ -411,14 +423,17 @@ async function route() {
 
 async function loadData() {
   const uid = state.session.user.id;
-  const [cards, mine, play, prof, wallet] = await Promise.all([
+  const [cards, mine, play, prof, wallet, requests] = await Promise.all([
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
     sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
     sb.from('profiles').select('display_name, avatar_url, friend_code').eq('id', uid).maybeSingle(),
-    sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle()
+    sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
+    sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid)
   ]);
   for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
+  // Niet fataal: enkel voor het bolletje op de Vrienden-tab
+  state.incomingRequests = requests.error ? 0 : (requests.count || 0);
   state.cards = cards.data;
   state.owned = new Map();
   for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
@@ -453,8 +468,16 @@ function renderAuth(mode) {
       <p id="authmsg" role="alert" class="msg"></p>
     </form>
     <button class="link" id="switch">${reg ? 'Ik heb al een account' : 'Nog geen account? Maak er een'}</button>
+    ${reg ? '' : '<button class="link" id="forgot">Wachtwoord vergeten?</button>'}
   </main>`;
   $('#switch').onclick = () => renderAuth(reg ? 'login' : 'register');
+  if (!reg) $('#forgot').onclick = () => renderForgot($('#authform').email.value);
+  if (authLinkError) {
+    $('#authmsg').className = 'msg err';
+    $('#authmsg').textContent = `${authLinkError} Vraag een nieuwe aan via 'Wachtwoord vergeten?'.`;
+    authLinkError = null;
+    history.replaceState(null, '', location.pathname);
+  }
   $('#authform').onsubmit = async e => {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -484,52 +507,73 @@ function renderAuth(mode) {
   };
 }
 
-// ---------- 3D-draaibare kaart (voor/achter, gebruikt in de zoom-dialoog) ----------
-const CARD_BACK_URL = 'cards/card-back.png';
-
-function renderZoomCard(c, opts = {}) {
-  const rarityClass = `r-${c.rarity}`;
-  const front = renderCard(c, opts);
-  return `<div class="flip-wrap"><div class="flip-card ${rarityClass}" id="flipCard">
-    <div class="flip-face front">${front}</div>
-    <div class="flip-face back"><div class="cardback"><img src="${esc(CARD_BACK_URL)}" alt="Polygon Trading Cards logo"></div></div>
-  </div></div>`;
+// ---------- Wachtwoord vergeten ----------
+function renderForgot(email = '') {
+  app.innerHTML = `
+  <main class="wrap">
+    <div class="hero" aria-hidden="true">${tiles('POLY', ['g','y','x','g'])}</div>
+    <h1>Wachtwoord vergeten</h1>
+    <p class="hint">Vul je e-mailadres in. We sturen je een link waarmee je een nieuw wachtwoord kan kiezen.</p>
+    <form id="forgotform" class="form">
+      <label>E-mail<input name="email" type="email" required autocomplete="email" value="${esc(email)}"></label>
+      <button class="btn" type="submit">Resetlink versturen</button>
+      <p id="forgotmsg" role="alert" class="msg"></p>
+    </form>
+    <button class="link" id="back">Terug naar inloggen</button>
+  </main>`;
+  $('#back').onclick = () => renderAuth('login');
+  $('#forgotform').onsubmit = async e => {
+    e.preventDefault();
+    const msg = $('#forgotmsg');
+    const btn = e.target.querySelector('button[type=submit]');
+    msg.className = 'msg'; msg.textContent = 'Versturen…'; btn.disabled = true;
+    try {
+      const { error } = await sb.auth.resetPasswordForEmail(e.target.email.value.trim(), {
+        redirectTo: location.origin + location.pathname
+      });
+      if (error) throw error;
+      msg.className = 'msg ok';
+      msg.textContent = 'Als er een account bestaat met dit e-mailadres, kreeg je zonet een mail met een resetlink. Kijk ook even in je spamfolder.';
+    } catch (err) {
+      msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false;
+    }
+  };
 }
 
-function attachFlip3D() {
-  const card = $('#flipCard');
-  if (!card) return;
-  let dragging = false, moved = false, startX = 0, startY = 0, startRotX = 0, startRotY = 0, rotX = 0, rotY = 0;
-  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const apply = () => { card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`; };
-  const snap = () => {
-    rotY = Math.round(rotY / 180) * 180;
-    rotX = 0;
-    apply();
+// Getoond wanneer iemand via de link in de reset-mail binnenkomt
+function renderResetPassword() {
+  app.innerHTML = `
+  <main class="wrap">
+    <div class="hero" aria-hidden="true">${tiles('POLY', ['g','y','x','g'])}</div>
+    <h1>Nieuw wachtwoord</h1>
+    <p class="hint">Kies een nieuw wachtwoord voor ${esc(state.session?.user?.email)}.</p>
+    <form id="resetform" class="form">
+      <label>Nieuw wachtwoord<input name="password" type="password" required minlength="6" autocomplete="new-password"></label>
+      <label>Herhaal wachtwoord<input name="password2" type="password" required minlength="6" autocomplete="new-password"></label>
+      <button class="btn" type="submit">Wachtwoord opslaan</button>
+      <p id="resetmsg" role="alert" class="msg"></p>
+    </form>
+  </main>`;
+  $('#resetform').onsubmit = async e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const msg = $('#resetmsg');
+    const btn = e.target.querySelector('button[type=submit]');
+    if (f.get('password') !== f.get('password2')) {
+      msg.className = 'msg err'; msg.textContent = 'De wachtwoorden komen niet overeen.'; return;
+    }
+    msg.className = 'msg'; msg.textContent = 'Opslaan…'; btn.disabled = true;
+    try {
+      const { error } = await sb.auth.updateUser({ password: f.get('password') });
+      if (error) throw error;
+      msg.className = 'msg ok'; msg.textContent = 'Wachtwoord gewijzigd! Je wordt doorgestuurd…';
+      state.recovery = false;
+      history.replaceState(null, '', location.pathname);
+      setTimeout(route, 1000);
+    } catch (err) {
+      msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false;
+    }
   };
-  card.addEventListener('pointerdown', e => {
-    dragging = true; moved = false;
-    startX = e.clientX; startY = e.clientY; startRotX = rotX; startRotY = rotY;
-    card.classList.add('dragging');
-    card.setPointerCapture(e.pointerId);
-  });
-  card.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    const dx = e.clientX - startX, dy = e.clientY - startY;
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-    rotY = startRotY + dx * 0.6;
-    rotX = clamp(startRotX - dy * 0.4, -22, 22);
-    apply();
-  });
-  const release = () => {
-    if (!dragging) return;
-    dragging = false;
-    card.classList.remove('dragging');
-    if (!moved) { rotY += 180; } // tik zonder slepen = flippen
-    snap();
-  };
-  card.addEventListener('pointerup', release);
-  card.addEventListener('pointercancel', release);
 }
 
 // ---------- Kaart tekenen ----------
@@ -582,23 +626,29 @@ function renderMain() {
       <button data-tab="book">Mijn boek</button>
       <button data-tab="stats">Statistieken</button>
       <button data-tab="battle">Battle</button>
-      <button data-tab="friends">Vrienden</button>
+      <button data-tab="friends">Vrienden <span class="tab-badge" data-friend-badge aria-label="nieuwe vriendschapsverzoeken"></span></button>
       <button data-tab="trade">Traden</button>
     </nav>
     <div id="view"></div>
   </div>
-  <dialog id="zoom" aria-label="Kaart bekijken">
-    <div class="zoombox"><div id="zcard"></div><p class="zoomhint">Sleep om te draaien · tik om te flippen</p><button class="link" id="zclose">Sluiten</button></div>
-  </dialog>
-  <dialog id="accModal" aria-label="Accountinstellingen"></dialog>`;
+  <dialog id="accModal" aria-label="Accountinstellingen"></dialog>
+  <dialog id="friendModal" aria-label="Statistieken van vriend"></dialog>`;
   $('#openAccount').onclick = () => openAccountModal();
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => { state.tab = b.dataset.tab; renderMain(); };
   });
-  const dlg = $('#zoom');
-  $('#zclose').onclick = () => dlg.close();
-  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  const fdlg = $('#friendModal');
+  fdlg.addEventListener('click', e => { if (e.target === fdlg) fdlg.close(); });
+  syncFriendBadge();
   renderView();
+}
+
+// Bolletje op de Vrienden-tab met het aantal openstaande inkomende verzoeken
+function syncFriendBadge() {
+  const b = document.querySelector('[data-friend-badge]');
+  if (!b) return;
+  b.textContent = state.incomingRequests;
+  b.hidden = !state.incomingRequests;
 }
 
 // ---------- Account-bolletje: naam, e-mail, wachtwoord, profielfoto ----------
@@ -752,7 +802,7 @@ function renderToday(view) {
       </details>
       <div id="uploadbox" class="form">
         <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Plak hier je gedeelde Wordle-resultaat"></textarea></label>
-        <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. CRANE"></label>
+        <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
         <button class="btn" id="go" disabled>Kaart trekken</button>
         <p id="msg" role="alert" class="msg"></p>
       </div>
@@ -872,7 +922,7 @@ function drawBook(view, groups, animate) {
       <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
       <div class="grid">${g.cards.map(c => {
         const n = state.owned.get(c.id) || 0;
-        return `<button class="slot" data-id="${c.id}" aria-label="${n ? esc(c.name) + ' bekijken' : 'Nog niet verzameld'}">${renderCard(c, n ? { count: n } : { locked: true })}</button>`;
+        return `<div class="slot">${renderCard(c, n ? { count: n } : { locked: true })}</div>`;
       }).join('')}</div>
       <div class="pageturn">
         <button id="prevp" ${state.page === 0 ? 'disabled' : ''}>← Vorige</button>
@@ -887,15 +937,6 @@ function drawBook(view, groups, animate) {
   });
   $('#prevp', view).onclick = () => { state.page = Math.max(0, state.page - 1); drawBook(view, groups, true); };
   $('#nextp', view).onclick = () => { state.page = Math.min(groups.length - 1, state.page + 1); drawBook(view, groups, true); };
-  view.querySelectorAll('button.slot').forEach(b => {
-    b.onclick = () => {
-      const card = state.cards.find(c => c.id === Number(b.dataset.id));
-      const n = state.owned.get(card.id) || 0;
-      $('#zcard').innerHTML = renderZoomCard(card, n ? { count: n } : { locked: true });
-      $('#zoom').showModal();
-      attachFlip3D();
-    };
-  });
 }
 
 // ---------- Tab: Statistieken ----------
@@ -904,7 +945,15 @@ async function renderStats(view) {
   const uid = state.session.user.id;
   const { data, error } = await sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', uid).order('play_date');
   if (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
-  const plays = data || [];
+  view.innerHTML = `<section class="col" style="max-width:none">
+    <h2>Mijn statistieken</h2>
+    <p class="hint">Een overzicht van al je Wordle-trekkingen tot nu toe.</p>
+    ${statsHtml(data || [])}
+  </section>`;
+}
+
+// Statistiek-tegels + verdeling van pogingen; gebruikt voor jezelf en voor vrienden
+function statsHtml(plays, extraCards = '') {
   const total = plays.length;
   const solvedCount = plays.filter(p => p.solved).length;
   const catCount = total - solvedCount;
@@ -924,14 +973,13 @@ async function renderStats(view) {
   for (const p of plays) if (p.solved && dist[p.attempts] !== undefined) dist[p.attempts]++;
   const maxDist = Math.max(1, ...Object.values(dist));
 
-  view.innerHTML = `<section class="col" style="max-width:none">
-    <h2>Mijn statistieken</h2>
-    <p class="hint">Een overzicht van al je Wordle-trekkingen tot nu toe.</p>
+  return `
     <div class="stat-cards">
       <div class="stat-card"><span class="stat-num">${total}</span><span class="stat-label">Totaal gespeeld</span></div>
       <div class="stat-card"><span class="stat-num">${streak}</span><span class="stat-label">Huidige streak (dagen)</span></div>
       <div class="stat-card"><span class="stat-num">${solvedCount}</span><span class="stat-label">Opgelost</span></div>
       <div class="stat-card"><span class="stat-num">${catCount}</span><span class="stat-label">Troostkatten</span></div>
+      ${extraCards}
     </div>
     <h3 style="margin-top:32px">Aantal pogingen bij oplossen</h3>
     <div class="bars">
@@ -941,28 +989,39 @@ async function renderStats(view) {
           <div class="bar-track"><div class="bar-fill" style="width:${(dist[n] / maxDist) * 100}%"></div></div>
           <span class="bar-val">${dist[n]}</span>
         </div>`).join('')}
-    </div>
-  </section>`;
+    </div>`;
 }
 
-// ---------- Tabs: Battle & Traden (coming soon) ----------
 // ---------- Tab: Vrienden ----------
+const friendAv = p => `<span class="friend-av" style="${p.avatar_url ? `background-image:url('${esc(p.avatar_url)}')` : ''}">${p.avatar_url ? '' : esc((p.display_name || '?').charAt(0).toUpperCase())}</span>`;
+
 async function renderFriends(view) {
   view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
   const uid = state.session.user.id;
-  const { data: rows, error } = await sb.from('friendships').select('friend_id').eq('user_id', uid);
-  if (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
-  const friendIds = (rows || []).map(r => r.friend_id);
-  let friends = [];
-  if (friendIds.length) {
-    const { data: profs, error: pErr } = await sb.from('profiles').select('id, display_name, avatar_url').in('id', friendIds);
+  const [friendRows, requestRows] = await Promise.all([
+    sb.from('friendships').select('friend_id').eq('user_id', uid),
+    sb.from('friend_requests').select('id, sender_id, recipient_id').or(`sender_id.eq.${uid},recipient_id.eq.${uid}`).order('created_at', { ascending: false }),
+  ]);
+  const loadErr = friendRows.error || requestRows.error;
+  if (loadErr) { view.innerHTML = `<section class="col"><p class="msg err">${esc(loadErr.message)}</p></section>`; return; }
+  const friendIds = friendRows.data.map(r => r.friend_id);
+  const incoming = requestRows.data.filter(r => r.recipient_id === uid);
+  const outgoing = requestRows.data.filter(r => r.sender_id === uid);
+  const ids = [...new Set([...friendIds, ...incoming.map(r => r.sender_id), ...outgoing.map(r => r.recipient_id)])];
+  const profiles = {};
+  if (ids.length) {
+    const { data: profs, error: pErr } = await sb.from('profiles').select('id, display_name, avatar_url').in('id', ids);
     if (pErr) { view.innerHTML = `<section class="col"><p class="msg err">${esc(pErr.message)}</p></section>`; return; }
-    friends = profs || [];
+    for (const p of profs || []) profiles[p.id] = p;
   }
+  const prof = id => profiles[id] || { id, display_name: '…' };
+  const friends = friendIds.map(prof).sort((a, b) => (a.display_name || '').localeCompare(b.display_name || ''));
+  state.incomingRequests = incoming.length;
+  syncFriendBadge();
 
   view.innerHTML = `<section class="col" style="max-width:none">
     <h2>Vrienden</h2>
-    <p class="hint">Deel je code met collega's, of voer hun code in om ze toe te voegen. Eenmaal vrienden kan je met elkaar kaarten ruilen.</p>
+    <p class="hint">Deel je code met collega's, of voer hun code in om een vriendschapsverzoek te sturen. Zodra ze accepteren, kan je elkaars statistieken bekijken en kaarten ruilen.</p>
     <div class="mycode">
       <span class="mycode-label">Jouw code</span>
       <span class="mycode-value" id="myCode">${esc(state.friendCode)}</span>
@@ -971,17 +1030,39 @@ async function renderFriends(view) {
     <form id="addFriendForm" class="form" style="margin-top:22px;max-width:420px">
       <label>Vriendencode<input id="friendCodeInput" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. 4F9K2A"></label>
       <p id="addFriendMsg" class="msg" role="alert"></p>
-      <button class="btn" type="submit">Vriend toevoegen</button>
+      <button class="btn" type="submit">Verzoek versturen</button>
     </form>
+    ${incoming.length ? `
+      <h3 style="margin-top:32px">Vriendschapsverzoeken (${incoming.length})</h3>
+      <ul class="friend-list">${incoming.map(r => `
+        <li class="friend-row">
+          ${friendAv(prof(r.sender_id))}
+          <span class="friend-name">${esc(prof(r.sender_id).display_name)}</span>
+          <button class="btn small" data-req="${r.id}" data-action="accept" type="button">Accepteren</button>
+          <button class="link danger" data-req="${r.id}" data-action="decline" type="button">Weigeren</button>
+        </li>`).join('')}</ul>` : ''}
+    ${outgoing.length ? `
+      <h3 style="margin-top:32px">Verstuurde verzoeken</h3>
+      <ul class="friend-list">${outgoing.map(r => `
+        <li class="friend-row">
+          ${friendAv(prof(r.recipient_id))}
+          <span class="friend-name">${esc(prof(r.recipient_id).display_name)}</span>
+          <span class="pill">In afwachting</span>
+          <button class="link danger" data-req="${r.id}" data-action="cancel" type="button">Annuleren</button>
+        </li>`).join('')}</ul>` : ''}
     <h3 style="margin-top:32px">Jouw vrienden${friends.length ? ` (${friends.length})` : ''}</h3>
     ${friends.length
-      ? `<ul class="friend-list">${friends.map(f => `
+      ? `<p class="hint" style="margin-bottom:0">Klik op een vriend om zijn of haar statistieken te bekijken.</p>
+        <ul class="friend-list">${friends.map(f => `
           <li class="friend-row">
-            <span class="friend-av" style="${f.avatar_url ? `background-image:url('${esc(f.avatar_url)}')` : ''}">${f.avatar_url ? '' : esc((f.display_name || '?').charAt(0).toUpperCase())}</span>
-            <span class="friend-name">${esc(f.display_name)}</span>
+            <button class="friend-open" data-open="${f.id}" type="button">
+              ${friendAv(f)}
+              <span class="friend-name">${esc(f.display_name)}</span>
+              <span class="friend-more" aria-hidden="true">Statistieken ›</span>
+            </button>
             <button class="link danger" data-remove="${f.id}" type="button">Verwijderen</button>
           </li>`).join('')}</ul>`
-      : `<p class="hint">Je hebt nog geen vrienden toegevoegd.</p>`}
+      : `<p class="hint">Je hebt nog geen vrienden.</p>`}
   </section>`;
 
   $('#copyCode').onclick = async () => {
@@ -996,24 +1077,31 @@ async function renderFriends(view) {
     msg.className = 'msg'; msg.textContent = 'Bezig…';
     try {
       if (!code) throw new Error('Vul een code in.');
-      const { data: target, error: fErr } = await sb.from('profiles').select('id, display_name').eq('friend_code', code).maybeSingle();
-      if (fErr) throw fErr;
-      if (!target) throw new Error('Geen account gevonden met die code.');
-      if (target.id === uid) throw new Error('Dat is je eigen code.');
-      const { error: insErr } = await sb.from('friendships').insert([
-        { user_id: uid, friend_id: target.id },
-        { user_id: target.id, friend_id: uid },
-      ]);
-      if (insErr) {
-        if (insErr.code === '23505') throw new Error(`${target.display_name} is al je vriend.`);
-        throw insErr;
-      }
-      msg.className = 'msg ok'; msg.textContent = `${target.display_name} toegevoegd!`;
-      setTimeout(() => renderFriends(view), 500);
+      const { data, error } = await sb.rpc('send_friend_request', { p_code: code });
+      if (error) throw error;
+      msg.className = 'msg ok';
+      msg.textContent = data.status === 'accepted'
+        ? `${data.name} had jou al een verzoek gestuurd — jullie zijn nu vrienden!`
+        : `Vriendschapsverzoek verstuurd naar ${data.name}.`;
+      setTimeout(() => renderFriends(view), 900);
     } catch (err) {
       msg.className = 'msg err'; msg.textContent = err.message;
     }
   };
+
+  view.querySelectorAll('[data-req]').forEach(btn => {
+    btn.onclick = async () => {
+      if (btn.dataset.action === 'decline' && !confirm('Dit vriendschapsverzoek weigeren?')) return;
+      btn.disabled = true;
+      const { error } = await sb.rpc('respond_friend_request', { p_request_id: Number(btn.dataset.req), p_action: btn.dataset.action });
+      if (error) { alert(error.message); btn.disabled = false; return; }
+      renderFriends(view);
+    };
+  });
+
+  view.querySelectorAll('[data-open]').forEach(btn => {
+    btn.onclick = () => openFriendStats(profiles[btn.dataset.open]);
+  });
 
   view.querySelectorAll('[data-remove]').forEach(btn => {
     btn.onclick = async () => {
@@ -1026,6 +1114,32 @@ async function renderFriends(view) {
       renderFriends(view);
     };
   });
+}
+
+// Pop-up met de statistieken en verzameling van een vriend
+async function openFriendStats(f) {
+  const dlg = $('#friendModal');
+  const head = `<div class="statbox-head">${friendAv(f)}<h2>${esc(f.display_name)}</h2></div>`;
+  dlg.innerHTML = `<div class="accbox statbox">${head}<p class="hint">Statistieken laden…</p></div>`;
+  dlg.showModal();
+  const [plays, cards] = await Promise.all([
+    sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', f.id).order('play_date'),
+    sb.from('user_cards').select('card_id').eq('user_id', f.id),
+  ]);
+  const err = plays.error || cards.error;
+  const collectible = state.cards.filter(c => c.rarity !== 'cat');
+  const owned = new Set((cards.data || []).map(r => r.card_id));
+  const have = collectible.filter(c => owned.has(c.id)).length;
+  const legendaries = collectible.filter(c => c.rarity === 'legendary' && owned.has(c.id)).length;
+  const extra = `
+    <div class="stat-card"><span class="stat-num">${have}/${collectible.length}</span><span class="stat-label">Kaarten verzameld</span></div>
+    <div class="stat-card"><span class="stat-num">${legendaries}</span><span class="stat-label">Legendaries</span></div>`;
+  dlg.innerHTML = `<div class="accbox statbox">
+    ${head}
+    ${err ? `<p class="msg err">${esc(err.message)}</p>` : statsHtml(plays.data || [], extra)}
+    <button type="button" class="link" id="friendClose">Sluiten</button>
+  </div>`;
+  $('#friendClose').onclick = () => dlg.close();
 }
 
 // ---------- Tab: Traden ----------
