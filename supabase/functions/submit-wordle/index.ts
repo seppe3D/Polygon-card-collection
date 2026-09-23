@@ -1,13 +1,17 @@
-// Supabase Edge Function: submit-wordle (v2)
+// Supabase Edge Function: submit-wordle (v3)
 // Vervang hiermee de volledige inhoud van je bestaande submit-wordle/index.ts.
+//
+// Wijziging t.o.v. v2:
+// - Een kaart die je al had, komt er nu ook bij als dubbel (om te ruilen),
+//   en je krijgt er daarnaast nog steeds polycoins voor.
 //
 // Wijzigingen t.o.v. v1:
 // - Random wordt getrokken via crypto.getRandomValues i.p.v. Math.random
 //   (elke trekking blijft sowieso al onafhankelijk per gebruiker/dag,
 //   want elke aanroep gebeurt in een eigen functie-invocatie; dit is
 //   gewoon een steviger random-bron).
-// - Als je al kaart X bezit en trekt 'm opnieuw: geen extra kaart, wel
-//   polycoins (afhankelijk van de zeldzaamheid) op je wallet.
+// - Als je al kaart X bezit en trekt 'm opnieuw: polycoins (afhankelijk van
+//   de zeldzaamheid) op je wallet.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CORS = {
@@ -25,7 +29,7 @@ const ODDS: Record<number, [number, number, number]> = {
   6: [95, 4.5, 0.5],
 };
 
-// Polycoins die je krijgt wanneer een trekking een kaart oplevert die je al had
+// Polycoins die je bovenop de dubbele kaart krijgt wanneer je een kaart trekt die je al had
 const COIN_VALUES: Record<string, number> = { common: 10, epic: 25, legendary: 60, cat: 5 };
 
 function cryptoRandom(): number {
@@ -183,6 +187,10 @@ Deno.serve(async (req) => {
       throw playErr;
     }
 
+    // De kaart komt er altijd bij, ook als je ze al had (dan is het een dubbel om te ruilen)
+    const { error: cardErr } = await admin.from("user_cards").insert({ user_id: user.id, card_id: card.id });
+    if (cardErr) throw cardErr;
+
     let coinsEarned = 0;
     if (isDuplicate) {
       coinsEarned = COIN_VALUES[rarity] ?? 10;
@@ -190,12 +198,9 @@ Deno.serve(async (req) => {
       const current = wallet?.polycoins ?? 0;
       const { error: walletErr } = await admin.from("user_wallet").upsert({ user_id: user.id, polycoins: current + coinsEarned });
       if (walletErr) throw walletErr;
-    } else {
-      const { error: cardErr } = await admin.from("user_cards").insert({ user_id: user.id, card_id: card.id });
-      if (cardErr) throw cardErr;
     }
 
-    return json({ card, rarity, solved: parsed.solved, attempts: parsed.solved ? parsed.attempts : null, isDuplicate, coinsEarned });
+    return json({ card, rarity, solved: parsed.solved, attempts: parsed.solved ? parsed.attempts : null, isDuplicate, coinsEarned, cardAdded: true });
   } catch (e) {
     console.error(e);
     return json({ error: e instanceof Error ? e.message : "Onbekende fout." }, 500);

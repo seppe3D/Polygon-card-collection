@@ -988,7 +988,7 @@ function renderToday(view) {
   view.innerHTML = `<section class="today-grid">
     <div class="col">
       <h2>Wordle van vandaag</h2>
-      <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart. Heb je een kaart al? Dan wordt ze omgezet in polycoins.</p>
+      <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart. Heb je een kaart al? Dan krijg je ze als dubbel om te ruilen, plus wat polycoins.</p>
       <details class="odds">
         <summary>Bekijk de kansen per aantal pogingen</summary>
         <table class="odds-table">
@@ -1032,9 +1032,11 @@ function renderToday(view) {
         throw new Error(errText);
       }
       state.play = { solved: data.solved, attempts: data.attempts, card_id: data.card.id, play_date: todayBrussels() };
-      if (!data.isDuplicate) {
+      // cardAdded: nieuwe Edge Function (v3) voegt ook dubbels toe; de oude enkel nieuwe kaarten
+      if (data.cardAdded ?? !data.isDuplicate) {
         state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
-      } else if (data.coinsEarned) {
+      }
+      if (data.coinsEarned) {
         state.wallet += data.coinsEarned;
         syncCoinUI();
       }
@@ -1074,7 +1076,9 @@ async function revealCard(res) {
   }
   const text = res.solved
     ? (res.isDuplicate
-        ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je had "${esc(res.card.name)}" al — omgezet in ${res.coinsEarned} polycoins.`
+        ? (res.cardAdded
+            ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je had "${esc(res.card.name)}" al — nu heb je een dubbel om te ruilen, plus ${res.coinsEarned} polycoins.`
+            : `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je had "${esc(res.card.name)}" al — omgezet in ${res.coinsEarned} polycoins.`)
         : `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[res.rarity]}-kaart.`)
     : 'Niet opgelost vandaag. Je krijgt een troostkat.';
   const confetti = (!reduce && res.rarity === 'legendary')
@@ -1130,9 +1134,9 @@ function drawBook(view, groups, animate) {
     <div class="page-body${animate ? ' turning' : ''}">
       <h3 class="pname">${esc(g.name)}</h3>
       <p class="pcount">${g.dupes
-        ? (g.cards.length ? `${g.cards.length} ${g.cards.length === 1 ? 'kaart' : 'kaarten'} met dubbels · ${dupes} extra exemplaren. Ruil ze met vrienden via Traden.` : '')
+        ? (g.cards.length ? `${g.cards.length} ${g.cards.length === 1 ? 'kaart' : 'kaarten'} met dubbels · ${dupes} extra ${dupes === 1 ? 'exemplaar' : 'exemplaren'}. Ruil ze met vrienden via Traden.` : '')
         : `${ownedIn(g)} van ${g.cards.length} verzameld`}</p>
-      ${g.dupes && !g.cards.length ? '<p class="pcount">Je hebt nog geen dubbele kaarten. Trek je een kaart die je al hebt, dan krijg je polycoins; dubbels krijg je via ruilen.</p>' : ''}
+      ${g.dupes && !g.cards.length ? '<p class="pcount">Je hebt nog geen dubbele kaarten. Trek je een kaart die je al hebt, dan komt ze hier terecht.</p>' : ''}
       <div class="grid">${g.cards.map(c => {
         const n = ownedCount(c.id);
         return n
