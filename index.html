@@ -299,13 +299,18 @@ dialog::backdrop{background:rgba(10,12,16,.78)}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
 
 /* Account-instellingen modal (naam/e-mail/wachtwoord/profielfoto) */
-.accbox{width:min(420px,92vw);padding:26px;display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet);animation:zoom-in .2s ease both}
+.accbox{width:min(420px,92vw);max-height:92vh;overflow-y:auto;padding:26px;display:grid;gap:6px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet);animation:zoom-in .2s ease both}
 .accbox h2{margin-bottom:4px}
 .photorow{display:flex;align-items:center;gap:16px;margin-bottom:6px}
 .photopreview{width:64px;height:64px;border-radius:50%;background-color:var(--bg2);background-size:cover;background-position:center;border:2px solid var(--line);color:#fff;display:grid;place-items:center;font:700 20px var(--body);flex-shrink:0}
 .accbox .rowbtns{display:flex;gap:12px;margin-top:6px}
 .accbox .rowbtns .btn{width:auto;flex:1}
 .accbox .link.danger{color:#F0897E}
+.acc-switch{border-top:1px solid var(--line);margin-top:10px;padding-top:14px;display:grid;gap:8px}
+.acc-switch h4{margin:0;font:700 15px var(--body);color:var(--ink-soft)}
+.acc-switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acc-switch-row small{color:var(--muted)}
+.acc-switch .link{justify-self:start;padding-left:0}
 
 /* Account-tab: 3D-personage + shop */
 .acc-grid{display:grid;gap:28px;align-items:start}
@@ -403,6 +408,47 @@ async function init() {
   route();
 }
 
+// ---------- Snel wisselen tussen accounts op dit toestel ----------
+// Sessies van eerder gebruikte accounts worden lokaal bewaard, zodat je zonder
+// opnieuw in te loggen kan wisselen (bv. tussen admin en een gewoon testaccount).
+const SAVED_KEY = 'ptc-saved-accounts';
+function savedAccounts() {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || {}; } catch (_) { return {}; }
+}
+function writeSavedAccounts(list) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (_) {}
+}
+async function saveCurrentAccount() {
+  const { data: { session } } = await sb.auth.getSession(); // altijd de meest recente tokens
+  if (!session) return;
+  const list = savedAccounts();
+  list[session.user.id] = {
+    email: session.user.email, name: state.name || session.user.email,
+    access_token: session.access_token, refresh_token: session.refresh_token
+  };
+  writeSavedAccounts(list);
+}
+function forgetAccount(userId) {
+  const list = savedAccounts();
+  delete list[userId];
+  writeSavedAccounts(list);
+}
+async function switchAccount(userId) {
+  await saveCurrentAccount();
+  const target = savedAccounts()[userId];
+  const { error } = await sb.auth.setSession({ access_token: target.access_token, refresh_token: target.refresh_token });
+  if (error) {
+    forgetAccount(userId);
+    throw new Error(`Sessie van ${target.email} is verlopen. Log opnieuw in met dat account.`);
+  }
+}
+async function addAnotherAccount() {
+  await saveCurrentAccount();
+  // Enkel de lokale sessie wissen (geen signOut), zodat de bewaarde sessie geldig blijft
+  try { localStorage.removeItem(sb.auth.storageKey); } catch (_) {}
+  location.reload();
+}
+
 async function route() {
   if (!state.session) {
     if (state.recovery && !authLinkError) authLinkError = 'De resetlink is ongeldig of verlopen.';
@@ -414,6 +460,7 @@ async function route() {
   app.innerHTML = '<p class="loading">Laden…</p>';
   try {
     await loadData();
+    saveCurrentAccount();
     renderMain();
   } catch (e) {
     app.innerHTML = `<main class="wrap"><p role="alert" class="err">${esc(e.message)}</p><button class="btn" id="out">Uitloggen</button></main>`;
@@ -702,6 +749,16 @@ function openAccountModal() {
           <button class="btn" type="submit">Opslaan</button>
         </div>
       </form>
+      <div class="acc-switch">
+        <h4>Accounts op dit toestel</h4>
+        ${Object.entries(savedAccounts()).filter(([id]) => id !== state.session.user.id).map(([id, a]) => `
+          <div class="acc-switch-row">
+            <span><strong>${esc(a.name)}</strong><br><small>${esc(a.email)}</small></span>
+            <button type="button" class="btn small" data-switch="${id}">Wisselen</button>
+          </div>`).join('')}
+        <button type="button" class="link" id="accAdd">+ Ander account toevoegen</button>
+        <p id="accSwitchMsg" role="alert" class="msg"></p>
+      </div>
       <button type="button" class="link danger" id="accLogout">Uitloggen</button>
     </div>`;
     $('#accCancel').onclick = () => dlg.close();
@@ -716,7 +773,15 @@ function openAccountModal() {
         $('#accSaveMsg').className = 'msg err'; $('#accSaveMsg').textContent = err.message;
       }
     };
-    $('#accLogout').onclick = () => sb.auth.signOut();
+    $('#accLogout').onclick = () => { forgetAccount(state.session.user.id); sb.auth.signOut(); };
+    $('#accAdd').onclick = () => addAnotherAccount();
+    dlg.querySelectorAll('[data-switch]').forEach(btn => {
+      btn.onclick = async () => {
+        btn.disabled = true;
+        try { await switchAccount(btn.dataset.switch); dlg.close(); }
+        catch (err) { $('#accSwitchMsg').className = 'msg err'; $('#accSwitchMsg').textContent = err.message; btn.disabled = false; }
+      };
+    });
     $('#accForm').onsubmit = async e => {
       e.preventDefault();
       const f = new FormData(e.target);
