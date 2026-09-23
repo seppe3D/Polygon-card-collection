@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Polygon Card Collection</title>
+<title>POLYGON Trading Cards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
@@ -94,8 +94,8 @@ a{color:var(--amber-soft)}
 .coinpill{display:flex;align-items:center;gap:6px;background:var(--wblack);border:1px solid var(--line);color:var(--yellow-soft);font:700 15px var(--body);padding:9px 16px;clip-path:var(--facet-sm);white-space:nowrap}
 .avbtn{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background-color:var(--panel);background-size:cover;background-position:center;color:#fff;font:700 17px var(--body);cursor:pointer;display:grid;place-items:center;padding:0;transition:border-color .15s ease,transform .15s ease}
 .avbtn:hover{border-color:var(--green-soft);transform:translateY(-1px)}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--wblack);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:30px}
-.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:15px 6px;font:700 15.5px var(--body);color:var(--ink-soft);cursor:pointer;min-height:50px}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:var(--wblack);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:30px}
+.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:13px 4px;font:700 13.5px var(--body);color:var(--ink-soft);cursor:pointer;min-height:50px;line-height:1.2}
 .tabs button[aria-current="page"]{background:var(--yellow);color:#15181D}
 
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
@@ -110,6 +110,16 @@ a{color:var(--amber-soft)}
 .stage .cw{width:min(440px,90vw)}
 .stage-placeholder{color:var(--muted);text-align:center;padding:64px 24px;border:1.5px dashed var(--line);border-radius:18px;width:100%;font-size:16px}
 .result{margin:0;text-align:center;font-weight:600;color:var(--ink-soft);max-width:56ch;font-size:1.15em}
+.odds{margin:4px 0 22px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:14px 18px}
+.odds summary{cursor:pointer;font-weight:700;color:var(--ink-soft);list-style:none}
+.odds summary::-webkit-details-marker{display:none}
+.odds summary::before{content:'▸ ';color:var(--yellow-soft)}
+.odds[open] summary::before{content:'▾ '}
+.odds-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14.5px}
+.odds-table th,.odds-table td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+.odds-table th{color:var(--yellow-soft);font-weight:700}
+.odds-table td{color:var(--ink-soft)}
+.odds-table tr:last-child td{border-bottom:0;font-style:italic}
 
 /* Shard-animatie + zotte pack-opening */
 .shard-wrap{position:relative;width:min(320px,76vw);aspect-ratio:5/7;display:grid;place-items:center}
@@ -195,6 +205,22 @@ a{color:var(--amber-soft)}
 .q{font:800 30cqw/1 var(--display);color:rgba(0,0,0,.28)}
 .dupe{position:absolute;right:-6px;top:-8px;background:var(--yellow);color:#15181D;clip-path:var(--facet-sm);padding:2px 9px;font:700 12px var(--body);z-index:2}
 
+/* Statistieken */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:20px}
+.stat-card{background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:22px 18px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.stat-num{font:800 40px var(--display);color:var(--green-soft)}
+.stat-label{color:var(--ink-soft);font-size:14.5px;font-weight:600}
+.bars{display:grid;gap:10px;margin-top:16px;max-width:560px}
+.bar-row{display:grid;grid-template-columns:70px 1fr 30px;align-items:center;gap:12px}
+.bar-label{font-size:14.5px;color:var(--ink-soft);font-weight:600}
+.bar-track{background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);height:22px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--yellow));min-width:3px;transition:width .4s ease}
+.bar-val{font-weight:700;text-align:right;color:var(--ink-soft)}
+
+/* Coming soon */
+.soon{text-align:center;padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.soon-badge{background:var(--yellow);color:#15181D;font:800 13px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:6px 16px;clip-path:var(--facet-sm);margin-bottom:6px}
+
 /* Boek */
 .book{background:linear-gradient(160deg,#3B2E20,#241A10);clip-path:var(--facet);padding:16px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6)}
 .spread{background:var(--page);clip-path:var(--facet-sm);padding:0;display:grid;grid-template-columns:300px 1fr;min-height:620px;position:relative;color:#241C0F}
@@ -223,7 +249,7 @@ a{color:var(--amber-soft)}
 
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
 dialog::backdrop{background:rgba(10,12,16,.78)}
-.zoombox{width:min(480px,92vw);padding:18px;display:grid;gap:12px;justify-items:center;animation:zoom-in .22s ease both}
+.zoombox{width:min(480px,92vw);padding:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;justify-items:center;animation:zoom-in .22s ease both}
 @keyframes zoom-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 .zoombox .link{color:#fff}
 .zoomhint{color:var(--ink-soft);font-size:14px;text-align:center;margin:0}
@@ -282,7 +308,6 @@ dialog::backdrop{background:rgba(10,12,16,.78)}
 <div id="app"><p class="loading">Laden…</p></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ---------------------------------------------------------------
 // Vul hier de gegevens van je Supabase-project in
@@ -338,7 +363,6 @@ async function init() {
 }
 
 async function route() {
-  teardownAvatar3D();
   if (!state.session) { renderAuth('login'); return; }
   app.innerHTML = '<p class="loading">Laden…</p>';
   try {
@@ -375,7 +399,7 @@ function renderAuth(mode) {
   app.innerHTML = `
   <main class="wrap">
     <div class="hero" aria-hidden="true">${tiles('POLY', ['g','y','x','g'])}</div>
-    <h1>Polygon <em>Card Collection</em></h1>
+    <h1>POLYGON <em>Trading Cards</em></h1>
     <p class="hint">Los de dagelijkse Wordle op, plak je resultaat en verzamel facetkaarten van je collega's.</p>
     <form id="authform" class="form">
       ${reg ? '<label>Naam<input name="name" required autocomplete="nickname" maxlength="30"></label>' : ''}
@@ -503,7 +527,7 @@ function renderMain() {
   app.innerHTML = `
   <div class="wrap wide" id="wrap">
     <header class="top">
-      <span class="brand">POLYGON <em>Card Collection</em></span>
+      <span class="brand">POLYGON <em>Trading Cards</em></span>
       <div class="topright">
         <span class="coinpill">🪙 <span data-coin>${state.wallet}</span></span>
         <button class="avbtn" id="openAccount" aria-label="Account instellingen"${avStyle}>${state.avatarUrl ? '' : initial}</button>
@@ -512,7 +536,9 @@ function renderMain() {
     <nav class="tabs" aria-label="Weergave">
       <button data-tab="today">Vandaag</button>
       <button data-tab="book">Mijn boek</button>
-      <button data-tab="account">Account</button>
+      <button data-tab="stats">Statistieken</button>
+      <button data-tab="battle">Battle</button>
+      <button data-tab="trade">Traden</button>
     </nav>
     <div id="view"></div>
   </div>
@@ -522,7 +548,7 @@ function renderMain() {
   <dialog id="accModal" aria-label="Accountinstellingen"></dialog>`;
   $('#openAccount').onclick = () => openAccountModal();
   document.querySelectorAll('.tabs button').forEach(b => {
-    b.onclick = () => { teardownAvatar3D(); state.tab = b.dataset.tab; renderMain(); };
+    b.onclick = () => { state.tab = b.dataset.tab; renderMain(); };
   });
   const dlg = $('#zoom');
   $('#zclose').onclick = () => dlg.close();
@@ -635,7 +661,9 @@ function renderView() {
   const view = $('#view');
   if (state.tab === 'today') renderToday(view);
   else if (state.tab === 'book') renderBook(view);
-  else renderAccount(view);
+  else if (state.tab === 'stats') renderStats(view);
+  else if (state.tab === 'battle') renderComingSoon(view, 'Battle', 'Binnenkort kan je hier je kaarten tegen collega\'s inzetten. Hou deze ruimte in de gaten!');
+  else if (state.tab === 'trade') renderComingSoon(view, 'Traden', 'Binnenkort kan je hier kaarten ruilen met collega\'s. Hou deze ruimte in de gaten!');
 }
 
 // ---------- Tab: Vandaag ----------
@@ -660,7 +688,22 @@ function renderToday(view) {
   view.innerHTML = `<section class="today-grid">
     <div class="col">
       <h2>Wordle van vandaag</h2>
-      <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart. Heb je een kaart al? Dan wordt ze omgezet in polycoins voor de shop.</p>
+      <p class="hint">Klik in Discord op <strong>Share</strong> bij je afgewerkte Wordle en plak het resultaat hieronder. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt gespeeld en opgelost hebt. Je trekt één kaart per dag, en hoe minder pogingen, hoe zeldzamer je kaart. Heb je een kaart al? Dan wordt ze omgezet in polycoins.</p>
+      <details class="odds">
+        <summary>Bekijk de kansen per aantal pogingen</summary>
+        <table class="odds-table">
+          <thead><tr><th>Pogingen</th><th>Common</th><th>Epic</th><th>Legendary</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0%</td><td>20%</td><td>80%</td></tr>
+            <tr><td>2</td><td>20%</td><td>50%</td><td>30%</td></tr>
+            <tr><td>3</td><td>55%</td><td>35%</td><td>10%</td></tr>
+            <tr><td>4</td><td>75%</td><td>22%</td><td>3%</td></tr>
+            <tr><td>5</td><td>88%</td><td>11%</td><td>1%</td></tr>
+            <tr><td>6</td><td>95%</td><td>4,5%</td><td>0,5%</td></tr>
+            <tr><td>Niet opgelost</td><td colspan="3">Altijd een troostkat</td></tr>
+          </tbody>
+        </table>
+      </details>
       <div id="uploadbox" class="form">
         <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="7" placeholder="Plak hier je gedeelde Wordle-resultaat"></textarea></label>
         <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. CRANE"></label>
@@ -809,313 +852,60 @@ function drawBook(view, groups, animate) {
   });
 }
 
-// ---------- Tab: Account (3D-personage + shop) ----------
-const FREE_HAIR = ['#2B1B12', '#6B4423', '#D9B382', '#1A1A1A', '#8B3A2B'];
-const FREE_SKIN = ['#F2C9A0', '#D9A066', '#A9653D', '#7A4A2B', '#4A2E1E'];
-const FREE_CLOTHES = ['#3B4A63', '#4C8A47', '#B69B2B', '#6A7482', '#8A3B3B'];
-const HAIRSTYLES = [
-  { id: 'none', label: 'Kaal' },
-  { id: 'short', label: 'Kort' },
-  { id: 'bob', label: 'Bob' },
-  { id: 'ponytail', label: 'Paardenstaart' },
-  { id: 'long', label: 'Lang' },
-];
+// ---------- Tab: Statistieken ----------
+async function renderStats(view) {
+  view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Statistieken laden…</p></section>`;
+  const uid = state.session.user.id;
+  const { data, error } = await sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', uid).order('play_date');
+  if (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
+  const plays = data || [];
+  const total = plays.length;
+  const solvedCount = plays.filter(p => p.solved).length;
+  const catCount = total - solvedCount;
 
-let avatarState = null;
-let accConfig = null;
-let shopItems = [];
-let ownedItemIds = new Set();
+  // Streak: aantal opeenvolgende dagen (tot en met vandaag of gisteren) dat er gespeeld is.
+  const playedDates = new Set(plays.map(p => p.play_date));
+  let streak = 0;
+  let cursor = new Date(todayBrussels() + 'T00:00:00');
+  if (!playedDates.has(todayBrussels())) cursor.setDate(cursor.getDate() - 1);
+  while (playedDates.has(cursor.toLocaleDateString('sv-SE'))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
 
-function renderAccount(view) {
+  // Verdeling van het aantal pogingen
+  const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  for (const p of plays) if (p.solved && dist[p.attempts] !== undefined) dist[p.attempts]++;
+  const maxDist = Math.max(1, ...Object.values(dist));
+
   view.innerHTML = `<section class="col" style="max-width:none">
-    <h2>Mijn personage</h2>
-    <p class="hint">Stel je 3D-personage samen. De basisopties zijn gratis. Extra kleuren en accessoires koop je in de winkel hieronder met polycoins — die krijg je wanneer je een kaart trekt die je al bezit.</p>
-    <div class="acc-grid">
-      <div>
-        <div id="avatar3d" class="avatar3d" aria-label="3D-voorbeeld van je personage"></div>
-        <p class="wallet">🪙 <span data-coin>${state.wallet}</span> polycoins</p>
-      </div>
-      <div class="acc-controls" id="accControls"><p class="hint">Laden…</p></div>
+    <h2>Mijn statistieken</h2>
+    <p class="hint">Een overzicht van al je Wordle-trekkingen tot nu toe.</p>
+    <div class="stat-cards">
+      <div class="stat-card"><span class="stat-num">${total}</span><span class="stat-label">Totaal gespeeld</span></div>
+      <div class="stat-card"><span class="stat-num">${streak}</span><span class="stat-label">Huidige streak (dagen)</span></div>
+      <div class="stat-card"><span class="stat-num">${solvedCount}</span><span class="stat-label">Opgelost</span></div>
+      <div class="stat-card"><span class="stat-num">${catCount}</span><span class="stat-label">Troostkatten</span></div>
+    </div>
+    <h3 style="margin-top:32px">Aantal pogingen bij oplossen</h3>
+    <div class="bars">
+      ${[1, 2, 3, 4, 5, 6].map(n => `
+        <div class="bar-row">
+          <span class="bar-label">${n} ${plural(n)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(dist[n] / maxDist) * 100}%"></div></div>
+          <span class="bar-val">${dist[n]}</span>
+        </div>`).join('')}
     </div>
   </section>`;
-  initAccountTab();
 }
 
-async function initAccountTab() {
-  const uid = state.session.user.id;
-  const [avatarRow, walletRow, items, inv] = await Promise.all([
-    sb.from('avatars').select('config').eq('user_id', uid).maybeSingle(),
-    sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
-    sb.from('shop_items').select('*').order('id'),
-    sb.from('user_inventory').select('item_id').eq('user_id', uid),
-  ]);
-  accConfig = (avatarRow.data && avatarRow.data.config && Object.keys(avatarRow.data.config).length)
-    ? avatarRow.data.config
-    : { gender: 'v', hairstyle: 'short', hairColor: FREE_HAIR[0], skinColor: FREE_SKIN[0], clothingColor: FREE_CLOTHES[0], glasses: false, accessory: null };
-  state.wallet = walletRow.data?.polycoins || 0;
-  syncCoinUI();
-  shopItems = items.data || [];
-  ownedItemIds = new Set((inv.data || []).map(r => r.item_id));
-
-  setupAvatar3D();
-  drawAccountControls();
-}
-
-function setupAvatar3D() {
-  const host = $('#avatar3d');
-  if (!host || typeof THREE === 'undefined') return;
-  teardownAvatar3D();
-  const w = host.clientWidth || 320, h = host.clientHeight || 400;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-  host.innerHTML = '';
-  host.appendChild(renderer.domElement);
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 100);
-  camera.position.set(0, 1.15, 4.2);
-  camera.lookAt(0, 0.75, 0);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x33241a, 1.1));
-  const key = new THREE.DirectionalLight(0xfff3d6, 1.1);
-  key.position.set(2, 3, 2);
-  scene.add(key);
-  const group = buildAvatarGroup(accConfig);
-  scene.add(group);
-  avatarState = { renderer, scene, camera, group, raf: 0, t: 0 };
-  const animate = () => {
-    if (!avatarState) return;
-    avatarState.t += 0.01;
-    avatarState.group.rotation.y = Math.sin(avatarState.t * 0.6) * 0.5;
-    avatarState.renderer.render(avatarState.scene, avatarState.camera);
-    avatarState.raf = requestAnimationFrame(animate);
-  };
-  animate();
-}
-
-function teardownAvatar3D() {
-  if (avatarState) {
-    cancelAnimationFrame(avatarState.raf);
-    avatarState.renderer.dispose();
-    avatarState = null;
-  }
-}
-
-function refreshAvatar3D() {
-  if (!avatarState) return;
-  avatarState.scene.remove(avatarState.group);
-  const group = buildAvatarGroup(accConfig);
-  avatarState.scene.add(group);
-  avatarState.group = group;
-}
-
-function buildAvatarGroup(cfg) {
-  const g = new THREE.Group();
-  const isM = cfg.gender === 'm';
-  const skin = new THREE.MeshStandardMaterial({ color: cfg.skinColor, roughness: .7 });
-  const cloth = new THREE.MeshStandardMaterial({ color: cfg.clothingColor, roughness: .8 });
-  const hairMat = new THREE.MeshStandardMaterial({ color: cfg.hairColor, roughness: .6 });
-  const pantsMat = new THREE.MeshStandardMaterial({ color: '#2B303B', roughness: .8 });
-
-  const torso = new THREE.Mesh(new THREE.CylinderGeometry(isM ? .46 : .38, isM ? .4 : .3, 1.1, 16), cloth);
-  torso.position.y = .55; g.add(torso);
-
-  const hip = new THREE.Mesh(new THREE.CylinderGeometry(isM ? .38 : .34, .32, .3, 16), cloth);
-  hip.position.y = -.05; g.add(hip);
-
-  const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 20, 20), skin);
-  head.position.y = 1.36; g.add(head);
-
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.14, .16, .16, 12), skin);
-  neck.position.y = 1.08; g.add(neck);
-
-  [-1, 1].forEach(side => {
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(.11, .1, .95, 10), cloth);
-    arm.position.set(side * (isM ? .58 : .5), .55, 0);
-    arm.rotation.z = side * .12;
-    g.add(arm);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 10), skin);
-    hand.position.set(side * (isM ? .63 : .55), .02, 0);
-    g.add(hand);
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(.15, .13, 1.05, 10), pantsMat);
-    leg.position.set(side * .18, -.75, 0);
-    g.add(leg);
-  });
-
-  if (cfg.hairstyle === 'short') {
-    const h = new THREE.Mesh(new THREE.SphereGeometry(.36, 16, 16, 0, Math.PI * 2, 0, Math.PI * .55), hairMat);
-    h.position.y = 1.42; g.add(h);
-  } else if (cfg.hairstyle === 'bob') {
-    const h = new THREE.Mesh(new THREE.SphereGeometry(.4, 16, 16, 0, Math.PI * 2, 0, Math.PI * .75), hairMat);
-    h.position.y = 1.38; g.add(h);
-  } else if (cfg.hairstyle === 'ponytail') {
-    const h = new THREE.Mesh(new THREE.SphereGeometry(.36, 16, 16, 0, Math.PI * 2, 0, Math.PI * .55), hairMat);
-    h.position.y = 1.42; g.add(h);
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(.06, .03, .5, 8), hairMat);
-    tail.position.set(0, 1.15, -.32); tail.rotation.x = .5; g.add(tail);
-  } else if (cfg.hairstyle === 'long') {
-    const h = new THREE.Mesh(new THREE.SphereGeometry(.38, 16, 16, 0, Math.PI * 2, 0, Math.PI * .6), hairMat);
-    h.position.y = 1.4; g.add(h);
-    const back = new THREE.Mesh(new THREE.CylinderGeometry(.32, .22, .8, 14), hairMat);
-    back.position.set(0, .98, -.12); g.add(back);
-  }
-
-  if (cfg.glasses) {
-    const lensMat = new THREE.MeshStandardMaterial({ color: '#1B2028', roughness: .3 });
-    [-1, 1].forEach(side => {
-      const lens = new THREE.Mesh(new THREE.TorusGeometry(.08, .015, 8, 16), lensMat);
-      lens.position.set(side * .13, 1.38, .3); g.add(lens);
-    });
-    const bridge = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .08, 6), lensMat);
-    bridge.rotation.z = Math.PI / 2;
-    bridge.position.set(0, 1.38, .3); g.add(bridge);
-  }
-
-  if (cfg.accessory === 'hat') {
-    const hat = new THREE.Mesh(new THREE.ConeGeometry(.3, .35, 16), new THREE.MeshStandardMaterial({ color: '#B03B3B' }));
-    hat.position.y = 1.72; g.add(hat);
-  } else if (cfg.accessory === 'crown') {
-    const crown = new THREE.Mesh(new THREE.CylinderGeometry(.32, .34, .18, 8), new THREE.MeshStandardMaterial({ color: '#E8C34C', metalness: .6, roughness: .3 }));
-    crown.position.y = 1.68; g.add(crown);
-  }
-
-  return g;
-}
-
-function itemFor(category, key) {
-  return shopItems.find(i => i.category === category && i.key === key);
-}
-function isUnlocked(category, key) {
-  const free = { hair_color: FREE_HAIR, skin_color: FREE_SKIN, clothing_color: FREE_CLOTHES }[category];
-  if (free && free.includes(key)) return true;
-  const item = itemFor(category, key);
-  return item ? ownedItemIds.has(item.id) : false;
-}
-
-function drawAccountControls() {
-  const el = $('#accControls');
-  if (!el) return;
-  const shopHair = shopItems.filter(i => i.category === 'hair_color');
-  const shopSkin = shopItems.filter(i => i.category === 'skin_color');
-  const shopClothes = shopItems.filter(i => i.category === 'clothing_color');
-  const shopAcc = shopItems.filter(i => i.category === 'accessory');
-  const fieldFor = { hair_color: 'hairColor', skin_color: 'skinColor', clothing_color: 'clothingColor' };
-
-  const swatchHtml = (category, key) => {
-    const item = itemFor(category, key);
-    const unlocked = isUnlocked(category, key);
-    const active = accConfig[fieldFor[category]] === key;
-    const title = item ? `${esc(item.label)}${unlocked ? '' : ` · ${item.price} polycoins`}` : '';
-    return `<button type="button" class="swatch ${active ? 'active' : ''} ${unlocked ? '' : 'locked'}"
-      style="--sw:${key}" data-cat="${category}" data-key="${key}" ${item ? `data-item="${item.id}"` : ''}
-      title="${title}" aria-label="${title || key}">${unlocked ? '' : '🔒'}</button>`;
-  };
-
-  el.innerHTML = `
-    <div class="opt-group">
-      <h4>Geslacht</h4>
-      <div class="styleopts">
-        <button type="button" data-set="gender" data-val="v" class="${accConfig.gender === 'v' ? 'active' : ''}">Vrouw</button>
-        <button type="button" data-set="gender" data-val="m" class="${accConfig.gender === 'm' ? 'active' : ''}">Man</button>
-      </div>
-    </div>
-    <div class="opt-group">
-      <h4>Kapsel</h4>
-      <div class="styleopts">${HAIRSTYLES.map(h => `<button type="button" data-set="hairstyle" data-val="${h.id}" class="${accConfig.hairstyle === h.id ? 'active' : ''}">${h.label}</button>`).join('')}</div>
-    </div>
-    <div class="opt-group">
-      <h4>Haarkleur</h4>
-      <div class="swatches">${FREE_HAIR.map(c => swatchHtml('hair_color', c)).join('')}${shopHair.map(i => swatchHtml('hair_color', i.key)).join('')}</div>
-    </div>
-    <div class="opt-group">
-      <h4>Huidskleur</h4>
-      <div class="swatches">${FREE_SKIN.map(c => swatchHtml('skin_color', c)).join('')}${shopSkin.map(i => swatchHtml('skin_color', i.key)).join('')}</div>
-    </div>
-    <div class="opt-group">
-      <h4>Kledijkleur</h4>
-      <div class="swatches">${FREE_CLOTHES.map(c => swatchHtml('clothing_color', c)).join('')}${shopClothes.map(i => swatchHtml('clothing_color', i.key)).join('')}</div>
-    </div>
-    <div class="opt-group">
-      <h4>Accessoires</h4>
-      <div class="styleopts">
-        <button type="button" data-set="glasses" class="${accConfig.glasses ? 'active' : ''}">👓 Bril</button>
-        <button type="button" data-set="accessory" data-clear="1" class="${!accConfig.accessory ? 'active' : ''}">Geen hoofddeksel</button>
-        ${shopAcc.map(i => `<button type="button" data-set="accessory" data-val="${i.key}" data-item="${i.id}" class="${accConfig.accessory === i.key ? 'active' : ''} ${isUnlocked('accessory', i.key) ? '' : 'locked'}">${isUnlocked('accessory', i.key) ? '' : '🔒 '}${esc(i.label)}${isUnlocked('accessory', i.key) ? '' : ` · ${i.price}🪙`}</button>`).join('')}
-      </div>
-    </div>
-    <button class="btn" id="saveAvatar">Personage opslaan</button>
-    <p id="accMsg" class="msg" role="alert"></p>
-  `;
-  syncCoinUI();
-
-  el.querySelectorAll('.styleopts button[data-set]').forEach(btn => {
-    btn.onclick = async () => {
-      const set = btn.dataset.set, val = btn.dataset.val;
-      if (set === 'glasses') {
-        accConfig.glasses = !accConfig.glasses;
-      } else if (set === 'accessory') {
-        if (btn.dataset.clear) {
-          accConfig.accessory = null;
-        } else if (!isUnlocked('accessory', val)) {
-          await tryBuy(Number(btn.dataset.item));
-          return;
-        } else {
-          accConfig.accessory = val;
-        }
-      } else {
-        accConfig[set] = val;
-      }
-      refreshAvatar3D();
-      drawAccountControls();
-    };
-  });
-
-  el.querySelectorAll('.swatch').forEach(btn => {
-    btn.onclick = async () => {
-      const cat = btn.dataset.cat, key = btn.dataset.key;
-      if (!isUnlocked(cat, key)) {
-        await tryBuy(Number(btn.dataset.item));
-        return;
-      }
-      accConfig[fieldFor[cat]] = key;
-      refreshAvatar3D();
-      drawAccountControls();
-    };
-  });
-
-  $('#saveAvatar').onclick = async () => {
-    const msg = $('#accMsg');
-    msg.className = 'msg'; msg.textContent = 'Opslaan…';
-    try {
-      const { error } = await sb.from('avatars').upsert({ user_id: state.session.user.id, config: accConfig, updated_at: new Date().toISOString() });
-      if (error) throw error;
-      msg.className = 'msg ok'; msg.textContent = 'Opgeslagen!';
-    } catch (err) {
-      msg.className = 'msg err'; msg.textContent = err.message;
-    }
-  };
-}
-
-async function tryBuy(itemId) {
-  const msg = $('#accMsg');
-  const item = shopItems.find(i => i.id === itemId);
-  if (!item) return;
-  if (!confirm(`"${item.label}" kost ${item.price} polycoins. Kopen?`)) return;
-  msg.className = 'msg'; msg.textContent = 'Aankoop verwerken…';
-  try {
-    const { data, error } = await sb.functions.invoke('buy-item', { body: { item_id: itemId } });
-    if (error) {
-      let errText = 'Aankoop mislukt.';
-      try { errText = (await error.context.json()).error || errText; } catch (_) {}
-      throw new Error(errText);
-    }
-    ownedItemIds.add(itemId);
-    state.wallet = data.newBalance;
-    syncCoinUI();
-    msg.className = 'msg ok'; msg.textContent = `Gekocht! Nieuw saldo: ${state.wallet} polycoins.`;
-    drawAccountControls();
-  } catch (err) {
-    msg.className = 'msg err'; msg.textContent = err.message;
-  }
+// ---------- Tabs: Battle & Traden (coming soon) ----------
+function renderComingSoon(view, title, desc) {
+  view.innerHTML = `<section class="col soon">
+    <div class="soon-badge">Coming soon</div>
+    <h2>${esc(title)}</h2>
+    <p class="hint">${esc(desc)}</p>
+  </section>`;
 }
 
 init();
