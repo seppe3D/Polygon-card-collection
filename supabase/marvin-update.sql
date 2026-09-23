@@ -3,13 +3,13 @@
 -- Veilig om opnieuw te draaien. Afbeeldingen: cards/marvin-1/2/7/9.jpg
 
 update public.cards set
-  name = 'Remote Work', image_url = 'cards/marvin-1.jpg',
-  flavor_text = 'Technically still in the office.'
+  name = 'Cable Chaos', image_url = 'cards/marvin-1.jpg',
+  flavor_text = 'Just one more cable. Probably.'
 where person = 'Marvin' and slot = 1;
 
 update public.cards set
-  name = 'Cable Chaos', image_url = 'cards/marvin-2.jpg',
-  flavor_text = 'Just one more cable. Probably.'
+  name = 'Remote Work', image_url = 'cards/marvin-2.jpg',
+  flavor_text = 'Technically still in the office.'
 where person = 'Marvin' and slot = 2;
 
 update public.cards set
