@@ -271,13 +271,27 @@ a{color:var(--amber-soft)}
 
 /* Battle */
 .battle-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.battle-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px}
+.battle-or{color:var(--muted);font-weight:600}
+.battle-box{background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:16px 18px;max-width:640px}
+.battle-box.highlight{border-color:var(--yellow)}
+.battle-box h3{margin-bottom:4px}
+.battle-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line);max-width:640px}
+.battle-row-text{flex:1;min-width:160px}
+.result-tag{font:700 12.5px var(--body);padding:4px 10px;border-radius:999px}
+.result-tag.won{background:var(--green);color:#12160f}
+.result-tag.lost{background:#5a2c28;color:#F0B3AB}
+.leaderboard{border-collapse:collapse;margin-top:8px;min-width:min(420px,100%);font-size:15px}
+.leaderboard th,.leaderboard td{text-align:left;padding:8px 14px;border-bottom:1px solid var(--line)}
+.leaderboard th{color:var(--yellow-soft);font-weight:700}
+.leaderboard tr.me td{color:var(--green-soft);font-weight:700}
 .battle-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;margin-top:8px}
 @media (max-width:560px){.battle-pick{grid-template-columns:repeat(2,1fr);gap:12px}}
 .pick{position:relative;background:none;border:0;padding:0;cursor:pointer;text-align:left;color:inherit;font:inherit;transition:transform .15s ease,opacity .15s ease;opacity:.72}
 .pick:hover{transform:translateY(-3px);opacity:1}
 .pick.selected{opacity:1}
 .pick.selected .card{outline:3px solid var(--yellow);outline-offset:3px}
-.pick-num{position:absolute;top:-10px;left:-8px;z-index:3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:#15181D;font:800 15px var(--body);box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.pick-num{position:absolute;top:38%;left:-10px;z-index:3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:#15181D;font:800 15px var(--body);box-shadow:0 3px 8px rgba(0,0,0,.4)}
 .pick-num[hidden]{display:none}
 .arena{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:start;max-width:640px;margin-top:10px}
 .fighter{display:grid;gap:8px;justify-items:center}
@@ -325,6 +339,7 @@ a{color:var(--amber-soft)}
 .index-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
 .index-list button{width:100%;text-align:left;background:none;border:0;padding:12px 12px;cursor:pointer;color:#241C0F;border-radius:0;display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 16px var(--body)}
 .index-list button:hover{background:rgba(0,0,0,.05)}
+.index-list .index-dupes{border-top:1px solid rgba(0,0,0,.12);margin-top:6px;padding-top:6px}
 .index-list button[aria-current="page"]{background:var(--yellow);color:#15181D}
 .index-list .frac{font:600 13.5px var(--body);color:#8A7A63;font-variant-numeric:tabular-nums}
 .index-list button[aria-current="page"] .frac{color:#15181D;opacity:.75}
@@ -453,7 +468,7 @@ const PARTICLE_COLORS = {
   cat: ['#2FA79E', '#8fe0da']
 };
 
-const state = { session: null, recovery: IS_RECOVERY_LINK, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, incomingRequests: 0, isAdmin: false, tab: 'today', page: 0 };
+const state = { session: null, recovery: IS_RECOVERY_LINK, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, incomingRequests: 0, incomingBattles: 0, isAdmin: false, tab: 'today', page: 0 };
 
 // Werkt alle plekken bij die het polycoins-saldo tonen (topbalk + account-tab)
 function syncCoinUI() {
@@ -543,20 +558,22 @@ async function route() {
 
 async function loadData() {
   const uid = state.session.user.id;
-  const [cards, mine, play, prof, wallet, requests, admin] = await Promise.all([
+  const [cards, mine, play, prof, wallet, requests, admin, battlesIn] = await Promise.all([
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
     sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
     sb.from('profiles').select('display_name, avatar_url, friend_code').eq('id', uid).maybeSingle(),
     sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
     sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid),
-    sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle()
+    sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle(),
+    sb.from('battles').select('id', { count: 'exact', head: true }).eq('opponent_id', uid).eq('status', 'pending')
   ]);
   for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
   // Niet fataal: enkel voor het bolletje op de Vrienden-tab
   state.incomingRequests = requests.error ? 0 : (requests.count || 0);
   // Admin ziet alle kaarten ontgrendeld (enkel weergave; echte bezittingen blijven ongewijzigd)
   state.isAdmin = !admin.error && !!admin.data;
+  state.incomingBattles = battlesIn.error ? 0 : (battlesIn.count || 0);
   state.cards = cards.data;
   state.owned = new Map();
   for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
@@ -782,7 +799,7 @@ function renderMain() {
       <button data-tab="today">Vandaag</button>
       <button data-tab="book">Mijn boek</button>
       <button data-tab="stats">Statistieken</button>
-      <button data-tab="battle">Battle</button>
+      <button data-tab="battle">Battle <span class="tab-badge" data-battle-badge aria-label="nieuwe uitdagingen"></span></button>
       <button data-tab="friends">Vrienden <span class="tab-badge" data-friend-badge aria-label="nieuwe vriendschapsverzoeken"></span></button>
       <button data-tab="trade">Traden</button>
     </nav>
@@ -800,7 +817,16 @@ function renderMain() {
   const fdlg = $('#friendModal');
   fdlg.addEventListener('click', e => { if (e.target === fdlg) fdlg.close(); });
   syncFriendBadge();
+  syncBattleBadge();
   renderView();
+}
+
+// Bolletje op de Battle-tab met het aantal uitdagingen die op jou wachten
+function syncBattleBadge() {
+  const b = document.querySelector('[data-battle-badge]');
+  if (!b) return;
+  b.textContent = state.incomingBattles;
+  b.hidden = !state.incomingBattles;
 }
 
 // Bolletje op de Vrienden-tab met het aantal openstaande inkomende verzoeken
@@ -1070,6 +1096,11 @@ function bookGroups() {
     g.cards.push(c);
   }
   for (const g of groups) g.cards.sort((a, b) => a.slot - b.slot);
+  // Extra pagina achteraan met alle kaarten die je meer dan één keer hebt
+  const dupeCards = state.cards
+    .filter(c => (state.owned.get(c.id) || 0) > 1)
+    .sort((a, b) => (state.owned.get(b.id) - state.owned.get(a.id)) || (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]));
+  groups.push({ name: 'Dubbels', dupes: true, cards: dupeCards });
   return groups;
 }
 const ownedCount = id => state.owned.get(id) || (state.isAdmin ? 1 : 0);
@@ -1084,7 +1115,7 @@ function renderBook(view) {
 
 function drawBook(view, groups, animate) {
   const g = groups[state.page];
-  const people = groups.filter(x => x.name !== 'Katten');
+  const people = groups.filter(x => x.name !== 'Katten' && !x.dupes);
   const total = people.reduce((n, x) => n + x.cards.length, 0);
   const have = people.reduce((n, x) => n + ownedIn(x), 0);
   const dupes = [...state.owned.values()].reduce((n, v) => n + (v - 1), 0);
@@ -1094,11 +1125,14 @@ function drawBook(view, groups, animate) {
       <h3>Verzamelboek</h3>
       <p class="sub">${have}/${total} kaarten${dupes ? ` · ${dupes} dubbel` : ''}</p>
       <ul class="index-list">${groups.map((x, i) =>
-        `<li><button data-i="${i}" aria-current="${i === state.page}">${esc(x.name)}<span class="frac">${ownedIn(x)}/${x.cards.length}</span></button></li>`).join('')}</ul>
+        `<li${x.dupes ? ' class="index-dupes"' : ''}><button data-i="${i}" aria-current="${i === state.page}">${esc(x.name)}<span class="frac">${x.dupes ? `${dupes} extra` : `${ownedIn(x)}/${x.cards.length}`}</span></button></li>`).join('')}</ul>
     </nav>
     <div class="page-body${animate ? ' turning' : ''}">
       <h3 class="pname">${esc(g.name)}</h3>
-      <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
+      <p class="pcount">${g.dupes
+        ? (g.cards.length ? `${g.cards.length} ${g.cards.length === 1 ? 'kaart' : 'kaarten'} met dubbels · ${dupes} extra exemplaren. Ruil ze met vrienden via Traden.` : '')
+        : `${ownedIn(g)} van ${g.cards.length} verzameld`}</p>
+      ${g.dupes && !g.cards.length ? '<p class="pcount">Je hebt nog geen dubbele kaarten. Trek je een kaart die je al hebt, dan krijg je polycoins; dubbels krijg je via ruilen.</p>' : ''}
       <div class="grid">${g.cards.map(c => {
         const n = ownedCount(c.id);
         return n
@@ -1584,11 +1618,62 @@ function simulateBattle(teamA, teamB, rand = Math.random) {
   return events;
 }
 
-function renderBattle(view) {
+const randomOpponent = team => team.map(c => {
+  const pool = state.cards.filter(x => x.rarity === c.rarity);
+  return pool[Math.floor(Math.random() * pool.length)];
+});
+
+// Zet het opgeslagen verloop van een server-gevecht om naar hetzelfde formaat als simulateBattle
+function fromServerEvents(events, teams) {
+  const other = s => s === 'A' ? 'B' : 'A';
+  return events.map(e => {
+    if (e.t === 'start') return { type: 'start', first: e.first, state: e.st };
+    if (e.t === 'atk') return { type: 'attack', side: e.s, kind: e.k, dmg: e.d, attacker: teams[e.s][e.ai], defender: teams[other(e.s)][e.di], state: e.st };
+    if (e.t === 'ko') return { type: 'ko', side: e.s, card: teams[e.s][e.i], state: e.st };
+    if (e.t === 'enter') return { type: 'enter', side: e.s, card: teams[e.s][e.i], state: e.st };
+    return { type: 'end', winner: e.w, state: e.st };
+  });
+}
+
+// Wissel kant A en B om, zodat "jij" altijd links staat
+function flipEvents(events) {
+  const f = s => s === 'A' ? 'B' : s === 'B' ? 'A' : s;
+  return events.map(e => ({ ...e, side: f(e.side), first: f(e.first), winner: f(e.winner), state: { A: e.state.B, B: e.state.A } }));
+}
+
+const battleErr = (view, e) => { view.innerHTML = `<section class="col"><p class="msg err">${esc(e.message)}</p></section>`; };
+
+async function renderBattle(view) {
+  view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
+  const uid = state.session.user.id;
   const owned = state.cards
     .filter(c => state.owned.has(c.id))
     .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || (b.attack - a.attack));
   battleState.team = battleState.team.filter(id => state.owned.has(id));
+
+  const [friendRows, battleRows, board] = await Promise.all([
+    sb.from('friendships').select('friend_id').eq('user_id', uid),
+    sb.from('battles').select('id, challenger_id, opponent_id, status, winner_id, coins_awarded, created_at, resolved_at')
+      .or(`challenger_id.eq.${uid},opponent_id.eq.${uid}`).order('created_at', { ascending: false }).limit(40),
+    sb.rpc('battle_leaderboard'),
+  ]);
+  if (friendRows.error) return battleErr(view, friendRows.error);
+  // Zonder schema-v6 bestaat de tabel nog niet: dan enkel de oefenmodus tonen
+  const online = !battleRows.error;
+  const battles = battleRows.data || [];
+  const friendIds = (friendRows.data || []).map(r => r.friend_id);
+  const ids = [...new Set([...friendIds, ...battles.flatMap(b => [b.challenger_id, b.opponent_id])])].filter(id => id !== uid);
+  const names = {};
+  if (ids.length) {
+    const { data: profs } = await sb.from('profiles').select('id, display_name').in('id', ids);
+    for (const p of profs || []) names[p.id] = p.display_name;
+  }
+  const nameOf = id => names[id] || '…';
+  const incoming = battles.filter(b => b.status === 'pending' && b.opponent_id === uid);
+  const outgoing = battles.filter(b => b.status === 'pending' && b.challenger_id === uid);
+  const done = battles.filter(b => b.status === 'done').slice(0, 10);
+  state.incomingBattles = incoming.length;
+  syncBattleBadge();
 
   if (owned.length < TEAM_SIZE) {
     view.innerHTML = `<section class="col soon">
@@ -1600,20 +1685,69 @@ function renderBattle(view) {
 
   view.innerHTML = `<section class="col" style="max-width:none">
     <h2>Battle</h2>
-    <p class="hint">Kies ${TEAM_SIZE} kaarten voor je team, in de volgorde waarin ze vechten. De actieve kaarten slaan om beurten: hoe hoger de ATK en hoe lager de DEF van de tegenstander, hoe meer schade. Valt een kaart op 0 HP, dan komt de volgende. Legendaries gebruiken hun special één keer, zodra ze onder de helft van hun HP zakken.</p>
+    <p class="hint">Kies ${TEAM_SIZE} kaarten, in de volgorde waarin ze vechten. De actieve kaarten slaan om beurten: hoe hoger je ATK en hoe lager de DEF van de tegenstander, hoe meer schade. Valt een kaart op 0 HP, dan komt de volgende. Legendaries gebruiken hun special één keer, zodra ze onder de helft van hun HP zakken.${online ? ' Win je van een vriend, dan krijg je 10 polycoins (maximaal 3 keer per dag).' : ''}</p>
+
+    ${incoming.length ? `<div class="battle-box highlight">
+      <h3>Uitdagingen voor jou (${incoming.length})</h3>
+      <p class="hint" style="margin-bottom:10px">Kies hieronder je team en accepteer. Het team van je tegenstander blijft geheim tot het gevecht.</p>
+      ${incoming.map(b => `<div class="battle-row">
+        <span class="battle-row-text"><strong>${esc(nameOf(b.challenger_id))}</strong> daagt je uit</span>
+        <button class="btn small" data-accept-battle="${b.id}" type="button">Accepteren met mijn team</button>
+        <button class="link danger" data-decline-battle="${b.id}" type="button">Weigeren</button>
+      </div>`).join('')}
+      <p class="msg" id="incomingMsg" role="alert"></p>
+    </div>` : ''}
+
+    <h3 style="margin-top:22px">Jouw team</h3>
     <div class="battle-bar">
       <span id="teamCount" class="pill"></span>
-      <button class="btn small" id="startBattle" type="button">Oefengevecht starten</button>
       <button class="link" id="clearTeam" type="button">Team wissen</button>
     </div>
-    <p class="hint" style="margin:6px 0 16px;font-size:14px">Oefenmodus tegen de computer: die krijgt kaarten van dezelfde zeldzaamheid als jouw team. Gevechten tegen vrienden volgen later.</p>
     <div class="battle-pick">${owned.map(c => `
       <button class="pick" type="button" data-pick="${c.id}" aria-pressed="false">
         <span class="pick-num" hidden></span>
         ${renderCard(c)}
       </button>`).join('')}</div>
+
+    <div class="battle-actions">
+      <button class="btn small" id="startBattle" type="button">Oefengevecht tegen de computer</button>
+      ${online ? (friendIds.length ? `<span class="battle-or">of</span>
+        <select id="battleFriend" class="tselect" style="width:auto;min-width:180px">
+          <option value="">Kies een vriend…</option>
+          ${friendIds.map(id => `<option value="${id}">${esc(nameOf(id))}</option>`).join('')}
+        </select>
+        <button class="btn small" id="challengeBattle" type="button">Vriend uitdagen</button>`
+        : '<span class="hint" style="margin:0">Voeg vrienden toe om ze uit te dagen.</span>') : ''}
+    </div>
+    <p class="msg" id="battleMsg" role="alert"></p>
+
+    ${outgoing.length ? `<h3 style="margin-top:26px">Openstaande uitdagingen</h3>
+      ${outgoing.map(b => `<div class="battle-row">
+        <span class="battle-row-text">Wachten op <strong>${esc(nameOf(b.opponent_id))}</strong></span>
+        <button class="link danger" data-cancel-battle="${b.id}" type="button">Annuleren</button>
+      </div>`).join('')}` : ''}
+
+    ${online ? `<h3 style="margin-top:26px">Recente gevechten</h3>
+      ${done.length ? done.map(b => {
+        const won = b.winner_id === uid;
+        const other = b.challenger_id === uid ? b.opponent_id : b.challenger_id;
+        return `<div class="battle-row">
+          <span class="result-tag ${won ? 'won' : 'lost'}">${won ? 'Gewonnen' : 'Verloren'}</span>
+          <span class="battle-row-text">tegen <strong>${esc(nameOf(other))}</strong>${won && b.coins_awarded ? ` · +${b.coins_awarded} 🪙` : ''}</span>
+          <button class="link" data-replay="${b.id}" type="button">Bekijk gevecht</button>
+        </div>`;
+      }).join('') : '<p class="hint">Nog geen gevechten tegen vrienden.</p>'}
+
+      <h3 style="margin-top:26px">Ranglijst</h3>
+      ${board.error ? `<p class="msg err">${esc(board.error.message)}</p>` : `<table class="leaderboard">
+        <thead><tr><th>#</th><th>Naam</th><th>Gewonnen</th><th>Verloren</th></tr></thead>
+        <tbody>${(board.data || []).map((r, i) => `<tr${r.user_id === uid ? ' class="me"' : ''}>
+          <td>${i + 1}</td><td>${esc(r.display_name)}</td><td>${r.wins}</td><td>${r.losses}</td></tr>`).join('')}</tbody>
+      </table>`}` : ''}
   </section>`;
 
+  const teamCards = () => battleState.team.map(id => state.cards.find(c => c.id === id));
+  const teamReady = () => battleState.team.length === TEAM_SIZE;
   const sync = () => {
     view.querySelectorAll('[data-pick]').forEach(b => {
       const idx = battleState.team.indexOf(Number(b.dataset.pick));
@@ -1623,7 +1757,7 @@ function renderBattle(view) {
       num.hidden = idx < 0; num.textContent = idx + 1;
     });
     $('#teamCount').textContent = `Team: ${battleState.team.length}/${TEAM_SIZE}`;
-    $('#startBattle').disabled = battleState.team.length !== TEAM_SIZE;
+    view.querySelectorAll('#startBattle, #challengeBattle, [data-accept-battle]').forEach(b => { b.disabled = !teamReady(); });
   };
   view.querySelectorAll('[data-pick]').forEach(b => {
     b.onclick = () => {
@@ -1635,29 +1769,87 @@ function renderBattle(view) {
     };
   });
   $('#clearTeam').onclick = () => { battleState.team = []; sync(); };
-  $('#startBattle').onclick = () => {
-    const mine = battleState.team.map(id => state.cards.find(c => c.id === id));
-    const opp = mine.map(c => {
-      const pool = state.cards.filter(x => x.rarity === c.rarity);
-      return pool[Math.floor(Math.random() * pool.length)];
+
+  const practice = mine => {
+    const opp = randomOpponent(mine);
+    playBattle(view, {
+      title: 'Oefengevecht', events: simulateBattle(mine, opp), teams: { A: mine, B: opp }, opponentName: 'Computer',
+      again: { label: 'Opnieuw met dit team', run: () => practice(mine) }
     });
-    playBattle(view, mine, opp);
   };
+  $('#startBattle').onclick = () => practice(teamCards());
+
+  const msg = (id, text, ok) => { const m = $(id); if (m) { m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; } };
+  if ($('#challengeBattle')) $('#challengeBattle').onclick = async () => {
+    const fid = $('#battleFriend').value;
+    if (!fid) return msg('#battleMsg', 'Kies eerst een vriend.');
+    const { error } = await sb.rpc('create_battle', { p_friend_id: fid, p_cards: battleState.team });
+    if (error) return msg('#battleMsg', error.message);
+    msg('#battleMsg', `Uitdaging verstuurd naar ${nameOf(fid)}! Je ziet het resultaat zodra die accepteert.`, true);
+    setTimeout(() => { if ($('#battleMsg')) renderBattle(view); }, 1200); // niet als er intussen een gevecht speelt
+  };
+  view.querySelectorAll('[data-cancel-battle]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    const { error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.cancelBattle), p_action: 'cancel' });
+    if (error) { alert(error.message); b.disabled = false; return; }
+    renderBattle(view);
+  });
+  view.querySelectorAll('[data-decline-battle]').forEach(b => b.onclick = async () => {
+    if (!confirm('Deze uitdaging weigeren?')) return;
+    b.disabled = true;
+    const { error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.declineBattle), p_action: 'decline' });
+    if (error) { alert(error.message); b.disabled = false; return; }
+    renderBattle(view);
+  });
+  view.querySelectorAll('[data-accept-battle]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    const { data, error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.acceptBattle), p_action: 'accept', p_cards: battleState.team });
+    if (error) { msg('#incomingMsg', error.message); b.disabled = false; return; }
+    if (data.status === 'cancelled') { msg('#incomingMsg', 'De uitdager heeft niet meer alle kaarten van zijn team, dus de uitdaging is geannuleerd.'); setTimeout(() => { if ($('#battleMsg')) renderBattle(view); }, 1800); return; }
+    replayBattle(view, data);
+  });
+  view.querySelectorAll('[data-replay]').forEach(b => b.onclick = async () => {
+    const { data, error } = await sb.from('battles').select('*').eq('id', Number(b.dataset.replay)).single();
+    if (error) { alert(error.message); return; }
+    replayBattle(view, data);
+  });
   sync();
 }
 
-async function playBattle(view, mine, opp) {
-  const events = simulateBattle(mine, opp);
-  const teams = { A: mine, B: opp };
+// Een gevecht tegen een vriend afspelen vanuit het opgeslagen verloop
+async function replayBattle(view, b) {
+  const uid = state.session.user.id;
+  const card = id => state.cards.find(c => c.id === id);
+  const teams = { A: b.challenger_cards.map(card), B: b.opponent_cards.map(card) };
+  const iAmA = b.challenger_id === uid;
+  const otherId = iAmA ? b.opponent_id : b.challenger_id;
+  const { data: prof } = await sb.from('profiles').select('display_name').eq('id', otherId).maybeSingle();
+  const events = fromServerEvents(b.events, teams);
+  const won = b.winner_id === uid;
+  if (won && b.coins_awarded) {
+    // Saldo opnieuw ophalen: de beloning is server-side bijgeschreven
+    const { data: w } = await sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle();
+    if (w) { state.wallet = w.polycoins; syncCoinUI(); }
+  }
+  playBattle(view, {
+    title: `Gevecht tegen ${prof?.display_name || 'je vriend'}`,
+    events: iAmA ? events : flipEvents(events),
+    teams: iAmA ? teams : { A: teams.B, B: teams.A },
+    opponentName: prof?.display_name || 'Tegenstander',
+    extra: won && b.coins_awarded ? `Je verdiende ${b.coins_awarded} polycoins.` : ''
+  });
+}
+
+async function playBattle(view, { title, events, teams, opponentName, again, extra = '' }) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let skip = false;
 
   view.innerHTML = `<section class="col" style="max-width:none">
-    <h2>Oefengevecht</h2>
+    <h2>${esc(title)}</h2>
     <div class="arena">
       <div class="fighter" id="fA"><div class="fighter-name">Jij</div><div class="fighter-card"></div><div class="hpbar"><div class="hpfill"></div></div><div class="hptext"></div><div class="bench"></div></div>
       <div class="vs" aria-hidden="true">VS</div>
-      <div class="fighter" id="fB"><div class="fighter-name">Computer</div><div class="fighter-card"></div><div class="hpbar"><div class="hpfill"></div></div><div class="hptext"></div><div class="bench"></div></div>
+      <div class="fighter" id="fB"><div class="fighter-name">${esc(opponentName)}</div><div class="fighter-card"></div><div class="hpbar"><div class="hpfill"></div></div><div class="hptext"></div><div class="bench"></div></div>
     </div>
     <div class="battle-bar" style="margin-top:18px">
       <button class="link" id="skipBattle" type="button">Overslaan</button>
@@ -1690,14 +1882,14 @@ async function playBattle(view, mine, opp) {
   const log = (html, cls = '') => {
     const li = document.createElement('li');
     li.innerHTML = html; if (cls) li.className = cls;
-    const ol = $('#battleLog'); ol.prepend(li);
+    $('#battleLog').prepend(li);
   };
-  const who = side => `<span class="who">${side === 'A' ? 'Jij' : 'Computer'}</span>`;
+  const who = side => `<span class="who">${esc(side === 'A' ? 'Jij' : opponentName)}</span>`;
 
   for (const ev of events) {
     if (!$('#battleLog')) return; // tab gewisseld
     draw(ev.state);
-    if (ev.type === 'start') log(`${ev.first === 'A' ? 'Jij begint' : 'De computer begint'}.`);
+    if (ev.type === 'start') log(`${ev.first === 'A' ? 'Jij begint' : `${esc(opponentName)} begint`}.`);
     if (ev.type === 'attack') {
       const text = ev.kind === 'special'
         ? `★ <strong>${esc(ev.attacker.special_name)}</strong>! ${esc(ev.attacker.name)} doet ${ev.dmg} schade.`
@@ -1723,22 +1915,18 @@ async function playBattle(view, mine, opp) {
       $('#skipBattle').hidden = true;
       $('#battleResult').innerHTML = `<div class="battle-result ${won ? 'won' : 'lost'}">
         <h3>${won ? 'Gewonnen!' : 'Verloren…'}</h3>
-        <p>${won ? 'Je team heeft de computer verslagen.' : 'De computer was deze keer sterker. Probeer een andere volgorde of andere kaarten.'}</p>
+        <p>${won ? `Je team heeft ${esc(opponentName)} verslagen.` : `${esc(opponentName)} was deze keer sterker. Probeer een andere volgorde of andere kaarten.`} ${esc(extra)}</p>
         <div class="battle-bar">
-          <button class="btn small" id="againBattle" type="button">Opnieuw met dit team</button>
-          <button class="link" id="newTeam" type="button">Ander team kiezen</button>
+          ${again ? `<button class="btn small" id="againBattle" type="button">${esc(again.label)}</button>` : ''}
+          <button class="link" id="backBattle" type="button">Terug naar Battle</button>
         </div>
       </div>`;
-      $('#againBattle').onclick = () => playBattle(view, mine, mine.map(c => {
-        const pool = state.cards.filter(x => x.rarity === c.rarity);
-        return pool[Math.floor(Math.random() * pool.length)];
-      }));
-      $('#newTeam').onclick = () => renderBattle(view);
+      if (again) $('#againBattle').onclick = again.run;
+      $('#backBattle').onclick = () => renderBattle(view);
     }
     if (!skip && !reduce) await sleep(ev.type === 'attack' ? 650 : ev.type === 'ko' ? 700 : 450);
   }
 }
-
 
 init();
 </script>
