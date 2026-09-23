@@ -290,7 +290,9 @@ a{color:var(--amber-soft)}
 .page-body .pname{font-size:26px;margin-bottom:2px}
 .page-body .pcount{color:#6B5E4C;font-size:15px;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;flex:1;align-content:start}
-.slot{display:block}
+.slot{display:block;background:none;border:0;padding:0;width:100%;text-align:left;color:inherit;font:inherit}
+button.slot{cursor:pointer;transition:transform .15s ease}
+button.slot:hover{transform:translateY(-3px)}
 .pageturn{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(0,0,0,.1)}
 .pageturn button{background:none;border:1px solid rgba(36,28,15,.25);clip-path:var(--facet-sm);padding:10px 18px;font:700 15px var(--body);cursor:pointer;color:#241C0F}
 .pageturn button:disabled{opacity:.3;cursor:default}
@@ -301,6 +303,24 @@ a{color:var(--amber-soft)}
 dialog{border:0;padding:0;background:transparent;max-width:none;overflow:visible}
 dialog::backdrop{background:rgba(10,12,16,.78)}
 @keyframes zoom-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+
+/* Kaart groot bekijken + omdraaien. Geen echte 3D met backface-visibility (werkt niet
+   samen met de backdrop-filter op de kaart): de kaart draait tot op haar kant, wisselt
+   van voor- naar achterkant en draait terug. */
+.zoombox{width:min(420px,88vw,calc((92vh - 70px) * .714));display:grid;gap:12px;justify-items:center;animation:zoom-in .22s ease both}
+.zoom-card{width:100%;background:none;border:0;padding:0;cursor:pointer;perspective:1200px;display:block;text-align:left;color:inherit;font:inherit}
+.zoom-inner{transition:transform .2s ease-in}
+.zoom-card.turning .zoom-inner{transform:rotateY(90deg) scale(.96)}
+.zoom-card.turning-back .zoom-inner{transition:transform .2s ease-out}
+.zoomhint{color:var(--ink-soft);font-size:14px;margin:0;text-align:center}
+.zoombox .link{color:#fff}
+.cardback{aspect-ratio:5/7;border-radius:6.5cqw;border:2.2cqw solid var(--rc);
+  background:#F2EEE2;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.12),0 10px 26px -10px rgba(0,0,0,.65),0 0 20px -3px var(--rc);
+  display:grid;place-items:center;overflow:hidden}
+.cardback{position:relative}
+.cardback img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+@media (prefers-reduced-motion:reduce){.zoom-inner,.zoom-card.turning-back .zoom-inner{transition:none}}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
 
 /* Account-instellingen modal (naam/e-mail/wachtwoord/profielfoto) */
@@ -638,6 +658,41 @@ function renderResetPassword() {
 }
 
 // ---------- Kaart tekenen ----------
+// ---------- Kaart groot bekijken, tik om om te draaien ----------
+const CARD_BACK_URL = 'cards/card-back.png';
+
+function renderCardBack(c) {
+  return `<div class="cw"><div class="cardback r-${c.rarity}"><img src="${CARD_BACK_URL}" alt="Achterkant van de kaart"></div></div>`;
+}
+
+function openZoom(card) {
+  const dlg = $('#zoom');
+  let showingBack = false, busy = false;
+  dlg.innerHTML = `<div class="zoombox">
+    <button type="button" class="zoom-card" id="zoomCard" aria-label="Kaart omdraaien">
+      <div class="zoom-inner" id="zoomInner">${renderCard(card)}</div>
+    </button>
+    <p class="zoomhint">Tik op de kaart om ze om te draaien</p>
+    <button type="button" class="link" id="zoomClose">Sluiten</button>
+  </div>`;
+  const btn = $('#zoomCard'), inner = $('#zoomInner');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  btn.onclick = async () => {
+    if (busy) return;
+    busy = true;
+    if (!reduce) { btn.classList.add('turning'); await sleep(200); }
+    showingBack = !showingBack;
+    inner.innerHTML = showingBack ? renderCardBack(card) : renderCard(card);
+    btn.classList.add('turning-back');
+    btn.classList.remove('turning');
+    if (!reduce) await sleep(200);
+    btn.classList.remove('turning-back');
+    busy = false;
+  };
+  $('#zoomClose').onclick = () => dlg.close();
+  dlg.showModal();
+}
+
 function renderCard(c, { locked = false, count = 1 } = {}) {
   const label = RARITY_LABEL[c.rarity];
   if (locked) {
@@ -694,11 +749,14 @@ function renderMain() {
     <div id="view"></div>
   </div>
   <dialog id="accModal" aria-label="Accountinstellingen"></dialog>
-  <dialog id="friendModal" aria-label="Statistieken van vriend"></dialog>`;
+  <dialog id="friendModal" aria-label="Statistieken van vriend"></dialog>
+  <dialog id="zoom" aria-label="Kaart bekijken"></dialog>`;
   $('#openAccount').onclick = () => openAccountModal();
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => { state.tab = b.dataset.tab; renderMain(); };
   });
+  const zdlg = $('#zoom');
+  zdlg.addEventListener('click', e => { if (e.target === zdlg) zdlg.close(); });
   const fdlg = $('#friendModal');
   fdlg.addEventListener('click', e => { if (e.target === fdlg) fdlg.close(); });
   syncFriendBadge();
@@ -1003,7 +1061,9 @@ function drawBook(view, groups, animate) {
       <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
       <div class="grid">${g.cards.map(c => {
         const n = ownedCount(c.id);
-        return `<div class="slot">${renderCard(c, n ? { count: n } : { locked: true })}</div>`;
+        return n
+          ? `<button class="slot" type="button" data-zoom="${c.id}" aria-label="${esc(c.name)} groot bekijken">${renderCard(c, { count: n })}</button>`
+          : `<div class="slot">${renderCard(c, { locked: true })}</div>`;
       }).join('')}</div>
       <div class="pageturn">
         <button id="prevp" ${state.page === 0 ? 'disabled' : ''}>← Vorige</button>
@@ -1018,6 +1078,9 @@ function drawBook(view, groups, animate) {
   });
   $('#prevp', view).onclick = () => { state.page = Math.max(0, state.page - 1); drawBook(view, groups, true); };
   $('#nextp', view).onclick = () => { state.page = Math.min(groups.length - 1, state.page + 1); drawBook(view, groups, true); };
+  view.querySelectorAll('[data-zoom]').forEach(b => {
+    b.onclick = () => openZoom(state.cards.find(c => c.id === Number(b.dataset.zoom)));
+  });
 }
 
 // ---------- Tab: Statistieken ----------
