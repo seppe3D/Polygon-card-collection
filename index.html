@@ -315,11 +315,11 @@ dialog::backdrop{background:rgba(10,12,16,.78)}
 .zoomhint{color:var(--ink-soft);font-size:14px;margin:0;text-align:center}
 .zoombox .link{color:#fff}
 .cardback{aspect-ratio:5/7;border-radius:6.5cqw;border:2.2cqw solid var(--rc);
-  background:#F2EEE2;
+  /* Ingezoomd op de groene kader van card-back.png (x 25-546, y 28-945 van 572x1024),
+     zodat de crèmekleurige rand van de afbeelding wegvalt; onderaan valt een stuk vloer weg */
+  background:#1d2a20 url('cards/card-back.png') 50% 9.5% / 110.5% auto no-repeat;
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.12),0 10px 26px -10px rgba(0,0,0,.65),0 0 20px -3px var(--rc);
   display:grid;place-items:center;overflow:hidden}
-.cardback{position:relative}
-.cardback img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 @media (prefers-reduced-motion:reduce){.zoom-inner,.zoom-card.turning-back .zoom-inner{transition:none}}
 .loading{padding:60px 16px;text-align:center;color:var(--muted)}
 
@@ -659,10 +659,8 @@ function renderResetPassword() {
 
 // ---------- Kaart tekenen ----------
 // ---------- Kaart groot bekijken, tik om om te draaien ----------
-const CARD_BACK_URL = 'cards/card-back.png';
-
 function renderCardBack(c) {
-  return `<div class="cw"><div class="cardback r-${c.rarity}"><img src="${CARD_BACK_URL}" alt="Achterkant van de kaart"></div></div>`;
+  return `<div class="cw"><div class="cardback r-${c.rarity}" role="img" aria-label="Achterkant van de kaart"></div></div>`;
 }
 
 function openZoom(card) {
