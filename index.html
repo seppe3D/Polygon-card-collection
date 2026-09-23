@@ -375,7 +375,7 @@ const PARTICLE_COLORS = {
   cat: ['#2FA79E', '#8fe0da']
 };
 
-const state = { session: null, recovery: IS_RECOVERY_LINK, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, incomingRequests: 0, tab: 'today', page: 0 };
+const state = { session: null, recovery: IS_RECOVERY_LINK, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, incomingRequests: 0, isAdmin: false, tab: 'today', page: 0 };
 
 // Werkt alle plekken bij die het polycoins-saldo tonen (topbalk + account-tab)
 function syncCoinUI() {
@@ -423,17 +423,20 @@ async function route() {
 
 async function loadData() {
   const uid = state.session.user.id;
-  const [cards, mine, play, prof, wallet, requests] = await Promise.all([
+  const [cards, mine, play, prof, wallet, requests, admin] = await Promise.all([
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
     sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
     sb.from('profiles').select('display_name, avatar_url, friend_code').eq('id', uid).maybeSingle(),
     sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
-    sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid)
+    sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid),
+    sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle()
   ]);
   for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
   // Niet fataal: enkel voor het bolletje op de Vrienden-tab
   state.incomingRequests = requests.error ? 0 : (requests.count || 0);
+  // Admin ziet alle kaarten ontgrendeld (enkel weergave; echte bezittingen blijven ongewijzigd)
+  state.isAdmin = !admin.error && !!admin.data;
   state.cards = cards.data;
   state.owned = new Map();
   for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
@@ -617,6 +620,7 @@ function renderMain() {
     <header class="top">
       <span class="brand">POLYGON <em>Trading Cards</em></span>
       <div class="topright">
+        ${state.isAdmin ? '<span class="pill pill-turn">Admin</span>' : ''}
         <span class="coinpill">🪙 <span data-coin>${state.wallet}</span></span>
         <button class="avbtn" id="openAccount" aria-label="Account instellingen"${avStyle}>${state.avatarUrl ? '' : initial}</button>
       </div>
@@ -894,7 +898,8 @@ function bookGroups() {
   for (const g of groups) g.cards.sort((a, b) => a.slot - b.slot);
   return groups;
 }
-const ownedIn = g => g.cards.filter(c => state.owned.has(c.id)).length;
+const ownedCount = id => state.owned.get(id) || (state.isAdmin ? 1 : 0);
+const ownedIn = g => g.cards.filter(c => ownedCount(c.id)).length;
 
 function renderBook(view) {
   const groups = bookGroups();
@@ -921,7 +926,7 @@ function drawBook(view, groups, animate) {
       <h3 class="pname">${esc(g.name)}</h3>
       <p class="pcount">${ownedIn(g)} van ${g.cards.length} verzameld</p>
       <div class="grid">${g.cards.map(c => {
-        const n = state.owned.get(c.id) || 0;
+        const n = ownedCount(c.id);
         return `<div class="slot">${renderCard(c, n ? { count: n } : { locked: true })}</div>`;
       }).join('')}</div>
       <div class="pageturn">
