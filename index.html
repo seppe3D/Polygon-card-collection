@@ -94,9 +94,13 @@ a{color:var(--amber-soft)}
 .coinpill{display:flex;align-items:center;gap:6px;background:var(--wblack);border:1px solid var(--line);color:var(--yellow-soft);font:700 15px var(--body);padding:9px 16px;clip-path:var(--facet-sm);white-space:nowrap}
 .avbtn{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background-color:var(--panel);background-size:cover;background-position:center;color:#fff;font:700 17px var(--body);cursor:pointer;display:grid;place-items:center;padding:0;transition:border-color .15s ease,transform .15s ease}
 .avbtn:hover{border-color:var(--green-soft);transform:translateY(-1px)}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:var(--wblack);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:30px}
-.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:13px 4px;font:700 13.5px var(--body);color:var(--ink-soft);cursor:pointer;min-height:50px;line-height:1.2}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;background:var(--wblack);border:1px solid var(--line);clip-path:var(--facet-sm);padding:4px;margin-bottom:30px}
+.tabs button{border:0;background:transparent;clip-path:var(--facet-sm);padding:13px 4px;font:700 13px var(--body);color:var(--ink-soft);cursor:pointer;min-height:50px;line-height:1.2}
 .tabs button[aria-current="page"]{background:var(--yellow);color:#15181D}
+@media (max-width:700px){
+  .tabs{display:flex;overflow-x:auto;grid-template-columns:none;gap:4px}
+  .tabs button{flex:0 0 auto;white-space:nowrap;padding:12px 14px}
+}
 
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
 .today-grid{display:grid;gap:44px;align-items:start}
@@ -216,6 +220,37 @@ a{color:var(--amber-soft)}
 .bar-track{background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);height:22px;overflow:hidden}
 .bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--yellow));min-width:3px;transition:width .4s ease}
 .bar-val{font-weight:700;text-align:right;color:var(--ink-soft)}
+
+/* Vrienden */
+.mycode{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:14px 18px;max-width:420px}
+.mycode-label{color:var(--ink-soft);font-size:14px;font-weight:600}
+.mycode-value{font:800 22px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;color:var(--yellow-soft)}
+.friend-list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px;max-width:460px}
+.friend-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:10px 14px}
+.friend-av{width:34px;height:34px;border-radius:50%;background-color:var(--bg2);background-size:cover;background-position:center;display:grid;place-items:center;font:700 14px var(--body);color:#fff;flex-shrink:0}
+.friend-name{flex:1;font-weight:600}
+
+/* Traden */
+.tselect{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);clip-path:var(--facet-sm);padding:13px;min-height:50px;font:16px var(--body)}
+.trade-builder{display:grid;gap:24px;margin-top:16px}
+@media (min-width:700px){.trade-builder{grid-template-columns:1fr 1fr}}
+.trade-builder h4{margin:0 0 12px;font-size:16px}
+.dup-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid var(--line)}
+.dup-owned{color:var(--muted);font-size:13px}
+.stepper{display:flex;align-items:center;gap:8px;margin-left:auto}
+.step-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--bg2);color:var(--ink);font:700 16px var(--body);cursor:pointer;line-height:1}
+.step-val{min-width:18px;text-align:center;font-weight:700}
+.trade-chip{display:inline-block;padding:4px 10px;border-radius:999px;font:600 13px var(--body);color:#fff;background:var(--rc,var(--grey))}
+.trade-list{display:grid;gap:16px;margin-top:14px}
+.trade-card{background:var(--panel);border:1px solid var(--line);clip-path:var(--facet-sm);padding:18px 20px;display:grid;gap:8px}
+.trade-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.trade-side-label{font-weight:700;color:var(--ink-soft);font-size:13.5px;min-width:82px}
+.trade-arrow{text-align:center;color:var(--yellow-soft);font-weight:700;margin:2px 0}
+.trade-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.btn.small{width:auto;min-height:auto;padding:10px 18px;font-size:15px}
+.pill{background:var(--bg2);border:1px solid var(--line);color:var(--ink-soft);font:700 12.5px var(--body);padding:5px 12px;border-radius:999px}
+.pill-turn{background:var(--yellow);color:#15181D;border-color:transparent}
+.tmsg:empty{display:none}
 
 /* Coming soon */
 .soon{text-align:center;padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -339,7 +374,7 @@ const PARTICLE_COLORS = {
   cat: ['#2FA79E', '#8fe0da']
 };
 
-const state = { session: null, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, wallet: 0, tab: 'today', page: 0 };
+const state = { session: null, cards: [], owned: new Map(), play: null, name: '', avatarUrl: null, friendCode: '', wallet: 0, tab: 'today', page: 0 };
 
 // Werkt alle plekken bij die het polycoins-saldo tonen (topbalk + account-tab)
 function syncCoinUI() {
@@ -380,7 +415,7 @@ async function loadData() {
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
     sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
-    sb.from('profiles').select('display_name, avatar_url').eq('id', uid).maybeSingle(),
+    sb.from('profiles').select('display_name, avatar_url, friend_code').eq('id', uid).maybeSingle(),
     sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle()
   ]);
   for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
@@ -390,8 +425,17 @@ async function loadData() {
   state.play = play.data;
   state.name = prof.data?.display_name || state.session.user.email.split('@')[0];
   state.avatarUrl = prof.data?.avatar_url || null;
+  state.friendCode = prof.data?.friend_code || '';
   state.wallet = wallet.data?.polycoins || 0;
 }
+
+// Telt per card_id hoeveel exemplaren een gebruiker bezit, op basis van ruwe user_cards-rijen
+function countByCard(rows) {
+  const m = new Map();
+  for (const r of rows) m.set(r.card_id, (m.get(r.card_id) || 0) + 1);
+  return m;
+}
+
 
 // ---------- Inloggen ----------
 function renderAuth(mode) {
@@ -538,6 +582,7 @@ function renderMain() {
       <button data-tab="book">Mijn boek</button>
       <button data-tab="stats">Statistieken</button>
       <button data-tab="battle">Battle</button>
+      <button data-tab="friends">Vrienden</button>
       <button data-tab="trade">Traden</button>
     </nav>
     <div id="view"></div>
@@ -663,7 +708,8 @@ function renderView() {
   else if (state.tab === 'book') renderBook(view);
   else if (state.tab === 'stats') renderStats(view);
   else if (state.tab === 'battle') renderComingSoon(view, 'Battle', 'Binnenkort kan je hier je kaarten tegen collega\'s inzetten. Hou deze ruimte in de gaten!');
-  else if (state.tab === 'trade') renderComingSoon(view, 'Traden', 'Binnenkort kan je hier kaarten ruilen met collega\'s. Hou deze ruimte in de gaten!');
+  else if (state.tab === 'friends') renderFriends(view);
+  else if (state.tab === 'trade') renderTrade(view);
 }
 
 // ---------- Tab: Vandaag ----------
@@ -900,6 +946,294 @@ async function renderStats(view) {
 }
 
 // ---------- Tabs: Battle & Traden (coming soon) ----------
+// ---------- Tab: Vrienden ----------
+async function renderFriends(view) {
+  view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
+  const uid = state.session.user.id;
+  const { data: rows, error } = await sb.from('friendships').select('friend_id').eq('user_id', uid);
+  if (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
+  const friendIds = (rows || []).map(r => r.friend_id);
+  let friends = [];
+  if (friendIds.length) {
+    const { data: profs, error: pErr } = await sb.from('profiles').select('id, display_name, avatar_url').in('id', friendIds);
+    if (pErr) { view.innerHTML = `<section class="col"><p class="msg err">${esc(pErr.message)}</p></section>`; return; }
+    friends = profs || [];
+  }
+
+  view.innerHTML = `<section class="col" style="max-width:none">
+    <h2>Vrienden</h2>
+    <p class="hint">Deel je code met collega's, of voer hun code in om ze toe te voegen. Eenmaal vrienden kan je met elkaar kaarten ruilen.</p>
+    <div class="mycode">
+      <span class="mycode-label">Jouw code</span>
+      <span class="mycode-value" id="myCode">${esc(state.friendCode)}</span>
+      <button class="link" id="copyCode" type="button">Kopiëren</button>
+    </div>
+    <form id="addFriendForm" class="form" style="margin-top:22px;max-width:420px">
+      <label>Vriendencode<input id="friendCodeInput" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="bv. 4F9K2A"></label>
+      <p id="addFriendMsg" class="msg" role="alert"></p>
+      <button class="btn" type="submit">Vriend toevoegen</button>
+    </form>
+    <h3 style="margin-top:32px">Jouw vrienden${friends.length ? ` (${friends.length})` : ''}</h3>
+    ${friends.length
+      ? `<ul class="friend-list">${friends.map(f => `
+          <li class="friend-row">
+            <span class="friend-av" style="${f.avatar_url ? `background-image:url('${esc(f.avatar_url)}')` : ''}">${f.avatar_url ? '' : esc((f.display_name || '?').charAt(0).toUpperCase())}</span>
+            <span class="friend-name">${esc(f.display_name)}</span>
+            <button class="link danger" data-remove="${f.id}" type="button">Verwijderen</button>
+          </li>`).join('')}</ul>`
+      : `<p class="hint">Je hebt nog geen vrienden toegevoegd.</p>`}
+  </section>`;
+
+  $('#copyCode').onclick = async () => {
+    try { await navigator.clipboard.writeText(state.friendCode); $('#copyCode').textContent = 'Gekopieerd!'; }
+    catch (_) { /* stil negeren als clipboard niet beschikbaar is */ }
+  };
+
+  $('#addFriendForm').onsubmit = async e => {
+    e.preventDefault();
+    const msg = $('#addFriendMsg');
+    const code = $('#friendCodeInput').value.trim().toUpperCase();
+    msg.className = 'msg'; msg.textContent = 'Bezig…';
+    try {
+      if (!code) throw new Error('Vul een code in.');
+      const { data: target, error: fErr } = await sb.from('profiles').select('id, display_name').eq('friend_code', code).maybeSingle();
+      if (fErr) throw fErr;
+      if (!target) throw new Error('Geen account gevonden met die code.');
+      if (target.id === uid) throw new Error('Dat is je eigen code.');
+      const { error: insErr } = await sb.from('friendships').insert([
+        { user_id: uid, friend_id: target.id },
+        { user_id: target.id, friend_id: uid },
+      ]);
+      if (insErr) {
+        if (insErr.code === '23505') throw new Error(`${target.display_name} is al je vriend.`);
+        throw insErr;
+      }
+      msg.className = 'msg ok'; msg.textContent = `${target.display_name} toegevoegd!`;
+      setTimeout(() => renderFriends(view), 500);
+    } catch (err) {
+      msg.className = 'msg err'; msg.textContent = err.message;
+    }
+  };
+
+  view.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.onclick = async () => {
+      const targetId = btn.dataset.remove;
+      if (!confirm('Deze vriend verwijderen?')) return;
+      btn.disabled = true;
+      const { error } = await sb.from('friendships').delete()
+        .or(`and(user_id.eq.${uid},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${uid})`);
+      if (error) { alert(error.message); btn.disabled = false; return; }
+      renderFriends(view);
+    };
+  });
+}
+
+// ---------- Tab: Traden ----------
+function tradeCardLine(ids) {
+  if (!ids || !ids.length) return '<span class="hint" style="margin:0">— niets —</span>';
+  const counts = countByCard(ids.map(card_id => ({ card_id })));
+  return [...counts.entries()].map(([cardId, n]) => {
+    const c = state.cards.find(x => x.id === cardId);
+    if (!c) return '';
+    return `<span class="trade-chip r-${c.rarity}">${n > 1 ? `${n}× ` : ''}${esc(c.name)}</span>`;
+  }).join('');
+}
+
+async function renderTrade(view) {
+  view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
+  const uid = state.session.user.id;
+  const [friendRows, tradeRows] = await Promise.all([
+    sb.from('friendships').select('friend_id').eq('user_id', uid),
+    sb.from('trade_requests').select('*').or(`proposer_id.eq.${uid},recipient_id.eq.${uid}`).eq('status', 'pending').order('updated_at', { ascending: false }),
+  ]);
+  if (friendRows.error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(friendRows.error.message)}</p></section>`; return; }
+  const friendIds = (friendRows.data || []).map(r => r.friend_id);
+  let friends = [];
+  if (friendIds.length) {
+    const { data: profs } = await sb.from('profiles').select('id, display_name, avatar_url').in('id', friendIds);
+    friends = profs || [];
+  }
+  const trades = tradeRows.data || [];
+  const otherIds = [...new Set(trades.flatMap(t => [t.proposer_id, t.recipient_id]))].filter(id => id !== uid);
+  let others = {};
+  if (otherIds.length) {
+    const { data: profs2 } = await sb.from('profiles').select('id, display_name').in('id', otherIds);
+    for (const p of (profs2 || [])) others[p.id] = p.display_name;
+  }
+
+  if (!friends.length) {
+    view.innerHTML = `<section class="col soon">
+      <h2>Traden</h2>
+      <p class="hint">Voeg eerst een vriend toe via het tabblad <strong>Vrienden</strong> om te kunnen ruilen.</p>
+    </section>`;
+    return;
+  }
+
+  view.innerHTML = `<section class="col" style="max-width:none">
+    <h2>Traden</h2>
+    <p class="hint">Je kan enkel dubbels aanbieden — je houdt altijd minstens 1 exemplaar van elke kaart over.</p>
+
+    <h3 style="margin-top:8px">Nieuw ruilvoorstel</h3>
+    <label style="display:block;max-width:340px;margin-bottom:16px">
+      <span style="display:block;font-weight:600;color:var(--ink-soft);margin-bottom:7px">Met wie wil je ruilen?</span>
+      <select id="tradeFriend" class="tselect">
+        <option value="">Kies een vriend…</option>
+        ${friends.map(f => `<option value="${f.id}">${esc(f.display_name)}</option>`).join('')}
+      </select>
+    </label>
+    <div id="tradeBuilder"></div>
+
+    <h3 style="margin-top:36px">Jouw ruilvoorstellen${trades.length ? ` (${trades.length})` : ''}</h3>
+    ${trades.length ? `<div class="trade-list">${trades.map(t => {
+      const iAmProposer = t.proposer_id === uid;
+      const otherName = others[iAmProposer ? t.recipient_id : t.proposer_id] || '…';
+      const myCards = iAmProposer ? t.proposer_cards : t.recipient_cards;
+      const theirCards = iAmProposer ? t.recipient_cards : t.proposer_cards;
+      const myTurn = t.turn === uid;
+      return `<div class="trade-card">
+        <div class="trade-row"><span class="trade-side-label">Jij geeft</span>${tradeCardLine(myCards)}</div>
+        <div class="trade-arrow">⇄ ${esc(otherName)}</div>
+        <div class="trade-row"><span class="trade-side-label">Jij krijgt</span>${tradeCardLine(theirCards)}</div>
+        <div class="trade-actions">
+          ${myTurn
+            ? `<span class="pill pill-turn">Jouw beurt</span>
+               <button class="btn small" data-accept="${t.id}">Accepteren</button>
+               <button class="link" data-counter="${t.id}">Tegenbod</button>
+               <button class="link danger" data-cancel="${t.id}">Annuleren</button>`
+            : `<span class="pill">Wachten op ${esc(otherName)}</span>
+               <button class="link danger" data-cancel="${t.id}">Annuleren</button>`}
+        </div>
+        <p class="tmsg msg" id="tmsg-${t.id}"></p>
+      </div>`;
+    }).join('')}</div>` : `<p class="hint">Je hebt momenteel geen openstaande ruilvoorstellen.</p>`}
+  </section>`;
+
+  $('#tradeFriend').onchange = e => {
+    const fid = e.target.value;
+    if (!fid) { $('#tradeBuilder').innerHTML = ''; return; }
+    drawTradeBuilder(fid, friends.find(f => f.id === fid)?.display_name || '');
+  };
+
+  view.querySelectorAll('[data-accept]').forEach(btn => btn.onclick = () => respondTrade(btn.dataset.accept, 'accept'));
+  view.querySelectorAll('[data-cancel]').forEach(btn => btn.onclick = () => respondTrade(btn.dataset.cancel, 'cancel'));
+  view.querySelectorAll('[data-counter]').forEach(btn => btn.onclick = () => {
+    const t = trades.find(x => x.id === Number(btn.dataset.counter));
+    openCounterBuilder(t, others);
+  });
+}
+
+async function respondTrade(tradeId, action, extra = {}) {
+  const msg = $(`#tmsg-${tradeId}`);
+  if (msg) { msg.className = 'msg'; msg.textContent = 'Bezig…'; }
+  try {
+    const { error } = await sb.rpc('respond_trade', { p_trade_id: Number(tradeId), p_action: action, ...extra });
+    if (error) throw error;
+    await loadData();
+    renderTrade($('#view'));
+  } catch (err) {
+    if (msg) { msg.className = 'msg err'; msg.textContent = err.message; }
+    else alert(err.message);
+  }
+}
+
+async function drawTradeBuilder(friendId, friendName, prefill = null) {
+  const host = $('#tradeBuilder');
+  host.innerHTML = '<p class="hint">Dubbels laden…</p>';
+  const uid = state.session.user.id;
+  const [mineRes, theirsRes] = await Promise.all([
+    sb.from('user_cards').select('card_id').eq('user_id', uid),
+    sb.from('user_cards').select('card_id').eq('user_id', friendId),
+  ]);
+  if (mineRes.error || theirsRes.error) { host.innerHTML = `<p class="msg err">${esc((mineRes.error || theirsRes.error).message)}</p>`; return; }
+  const mine = countByCard(mineRes.data || []);
+  const theirs = countByCard(theirsRes.data || []);
+  const myDupes = [...mine.entries()].filter(([, n]) => n > 1);
+  const theirDupes = [...theirs.entries()].filter(([, n]) => n > 1);
+
+  const pick = { mine: new Map(), theirs: new Map() }; // card_id -> aantal geselecteerd
+  if (prefill) {
+    for (const id of prefill.mine) pick.mine.set(id, (pick.mine.get(id) || 0) + 1);
+    for (const id of prefill.theirs) pick.theirs.set(id, (pick.theirs.get(id) || 0) + 1);
+  }
+
+  const rowHtml = (side, cardId, max, selected) => {
+    const c = state.cards.find(x => x.id === cardId);
+    if (!c) return '';
+    return `<div class="dup-row">
+      <span class="trade-chip r-${c.rarity}">${esc(c.name)}</span>
+      <span class="dup-owned">(${max + 1}× in bezit)</span>
+      <div class="stepper">
+        <button type="button" class="step-btn" data-side="${side}" data-card="${cardId}" data-d="-1">−</button>
+        <span class="step-val" data-val="${side}-${cardId}">${selected}</span>
+        <button type="button" class="step-btn" data-side="${side}" data-card="${cardId}" data-d="1">+</button>
+      </div>
+    </div>`;
+  };
+
+  const draw = () => {
+    host.innerHTML = `<div class="trade-builder">
+      <div>
+        <h4>Jouw dubbels</h4>
+        ${myDupes.length ? myDupes.map(([id, n]) => rowHtml('mine', id, n - 1, pick.mine.get(id) || 0)).join('') : '<p class="hint">Je hebt geen dubbels.</p>'}
+      </div>
+      <div>
+        <h4>Dubbels van ${esc(friendName)}</h4>
+        ${theirDupes.length ? theirDupes.map(([id, n]) => rowHtml('theirs', id, n - 1, pick.theirs.get(id) || 0)).join('') : '<p class="hint">Geen dubbels bekend.</p>'}
+      </div>
+    </div>
+    <p id="builderMsg" class="msg" role="alert"></p>
+    <button class="btn" id="sendTrade" type="button" style="max-width:280px">${prefill ? 'Tegenbod versturen' : 'Ruilvoorstel versturen'}</button>`;
+
+    host.querySelectorAll('.step-btn').forEach(btn => {
+      btn.onclick = () => {
+        const side = btn.dataset.side, cardId = Number(btn.dataset.card), d = Number(btn.dataset.d);
+        const map = pick[side];
+        const max = side === 'mine' ? mine.get(cardId) - 1 : theirs.get(cardId) - 1;
+        const cur = map.get(cardId) || 0;
+        const next = Math.max(0, Math.min(max, cur + d));
+        map.set(cardId, next);
+        host.querySelector(`[data-val="${side}-${cardId}"]`).textContent = next;
+      };
+    });
+
+    $('#sendTrade').onclick = async () => {
+      const bMsg = $('#builderMsg');
+      const myCards = [...pick.mine.entries()].flatMap(([id, n]) => Array(n).fill(id));
+      const theirCards = [...pick.theirs.entries()].flatMap(([id, n]) => Array(n).fill(id));
+      if (!myCards.length && !theirCards.length) { bMsg.className = 'msg err'; bMsg.textContent = 'Selecteer minstens één kaart.'; return; }
+      bMsg.className = 'msg'; bMsg.textContent = 'Versturen…';
+      try {
+        if (prefill) {
+          await respondTrade(prefill.tradeId, 'counter', { p_proposer_cards: prefill.proposerIsMe ? myCards : theirCards, p_recipient_cards: prefill.proposerIsMe ? theirCards : myCards });
+        } else {
+          const { error } = await sb.rpc('create_trade', { p_friend_id: friendId, p_my_cards: myCards, p_their_cards: theirCards });
+          if (error) throw error;
+          bMsg.className = 'msg ok'; bMsg.textContent = 'Voorstel verstuurd!';
+          setTimeout(() => renderTrade($('#view')), 600);
+        }
+      } catch (err) {
+        bMsg.className = 'msg err'; bMsg.textContent = err.message;
+      }
+    };
+  };
+  draw();
+}
+
+function openCounterBuilder(t, others) {
+  const uid = state.session.user.id;
+  const proposerIsMe = t.proposer_id === uid;
+  const otherId = proposerIsMe ? t.recipient_id : t.proposer_id;
+  const otherName = others[otherId] || '…';
+  $('#tradeFriend').value = '';
+  drawTradeBuilder(otherId, otherName, {
+    tradeId: t.id,
+    proposerIsMe,
+    mine: proposerIsMe ? t.proposer_cards : t.recipient_cards,
+    theirs: proposerIsMe ? t.recipient_cards : t.proposer_cards,
+  });
+  $('#tradeBuilder').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function renderComingSoon(view, title, desc) {
   view.innerHTML = `<section class="col soon">
     <div class="soon-badge">Coming soon</div>
