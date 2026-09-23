@@ -7,7 +7,6 @@
 --
 -- Upload de 9 afbeeldingen naar de map "cards/" in je GitHub-repo met exact
 -- deze bestandsnamen: kat-1.jpg .. kat-9.jpg
--- (de prompts staan in troostkatten-prompts.md)
 
 -- 1. Drie extra kattenkaarten (slot 7-9), met dezelfde stats als de eerste kat
 insert into public.cards (person, slot, name, rarity, hp, attack, defense)
