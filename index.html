@@ -173,6 +173,27 @@ a{color:var(--amber-soft)}
   box-shadow:0 14px 34px -8px rgba(0,0,0,.7);color:var(--ink);font-weight:600;animation:menu-in .25s ease both}
 .update-bar .btn{width:auto}
 
+/* Ideeënbus */
+.ideas-grid{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+@media (max-width:899px){.ideas-grid{grid-template-columns:1fr}}
+.seg{display:flex;background:rgba(21,24,29,.8);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;color:var(--ink-soft);font:700 13px var(--body);padding:5px 12px;border-radius:999px;cursor:pointer}
+.seg button.on{background:var(--yellow);color:#15181D}
+.idea-list{display:grid;gap:8px;max-height:calc(100vh - 230px);overflow-y:auto;padding-right:6px}
+@media (max-width:899px){.idea-list{max-height:none}}
+.idea{display:flex;gap:12px;align-items:flex-start;background:rgba(35,41,50,.88);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px}
+.idea.status-done,.idea.status-rejected{opacity:.65}
+.vote{display:grid;justify-items:center;min-width:46px;padding:6px 4px;border:2px solid var(--line);border-radius:12px;background:rgba(21,24,29,.7);color:var(--ink-soft);cursor:pointer;font:800 15px var(--body);transition:transform .1s,border-color .15s}
+.vote:active{transform:scale(.94)}
+.vote .vote-arrow{font-size:12px;line-height:1}
+.vote.on{border-color:var(--green);background:rgba(93,163,82,.2);color:var(--green-soft)}
+.idea-main{flex:1;min-width:0}
+.idea-body{margin:0 0 4px;white-space:pre-wrap;overflow-wrap:anywhere}
+.idea-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;color:var(--muted);font-size:13px}
+.idea-status{font-weight:700;color:var(--ink-soft)}
+.idea-set{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:2px 6px;font:600 12.5px var(--body)}
+.idea-meta .link{font-size:13px;padding:0}
+
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
 .today-grid{display:grid;gap:32px;align-items:start}
 .today-grid .col{max-width:none}
@@ -952,6 +973,7 @@ const TABS = [
   { id: 'friends', label: 'Friends', icon: '👥', badge: 'friend' },
   { id: 'trade', label: 'Trade', icon: '🔁' },
   { id: 'shop', label: 'Shop', icon: '🛒' },
+  { id: 'ideas', label: 'Ideas', icon: '💡' },
 ];
 
 function renderMain() {
@@ -1050,6 +1072,11 @@ const INFO = {
     <p>Deel je code met collega's, of voer hun code in om een vriendschapsverzoek te sturen.</p>
     <ul><li>Zodra ze accepteren, kan je elkaars statistieken bekijken, kaarten ruilen en elkaar uitdagen in Battle.</li>
     <li>Klik op een vriend om zijn of haar statistieken te zien.</li></ul>`],
+  ideas: ['Ideeënbus', `
+    <p>Heb je een idee om de site beter of leuker te maken? Dien het hier in — iedereen kan alle ideeën zien.</p>
+    <ul><li>Stem met ▲ op de ideeën die jij ook wil. Nog eens klikken trekt je stem in.</li>
+    <li>De populairste ideeën staan bovenaan. Seppe duidt aan wat 📅 gepland, ✅ klaar of ❌ niet gepland is.</li>
+    <li>Je kan je eigen ideeën verwijderen.</li></ul>`],
   shop: ['Shop', `
     <p>Besteed je polycoins — die verdien je met battles en met dubbele trekkingen.</p>
     <ul><li><strong>Pakjes</strong>: Basic Pack (1 kaart, 60 🪙) of Epic Pack (3 kaarten, de 3e gegarandeerd epic of legendary, 200 🪙).</li>
@@ -1301,6 +1328,7 @@ function renderView() {
   else if (state.tab === 'friends') renderFriends(view);
   else if (state.tab === 'trade') renderTrade(view);
   else if (state.tab === 'shop') renderShop(view);
+  else if (state.tab === 'ideas') renderIdeas(view);
 }
 
 // ---------- Tab: Today — eigen Wordle, 2 rondes per dag ----------
@@ -2247,6 +2275,123 @@ function renderShop(view) {
     state.owned.set(c.id, state.owned.get(c.id) - data.sold);
     renderShop(view);
     msg(`Verkocht: ${data.sold}× "${c.name}" voor ${data.earned} polycoins.`, true);
+  });
+}
+
+// ---------- Tab: Ideas — ideeënbus met upvotes (schema-v11-suggestions.sql) ----------
+const IDEA_STATUS = {
+  open: { icon: '💭', label: 'Open' },
+  planned: { icon: '📅', label: 'Gepland' },
+  done: { icon: '✅', label: 'Klaar' },
+  rejected: { icon: '❌', label: 'Niet gepland' },
+};
+const ideaState = { sort: 'votes' };
+
+async function renderIdeas(view) {
+  view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
+  const uid = state.session.user.id;
+  const [sug, votes] = await Promise.all([
+    sb.from('suggestions').select('id, user_id, body, status, created_at').order('created_at', { ascending: false }),
+    sb.from('suggestion_votes').select('suggestion_id, user_id'),
+  ]);
+  if (state.tab !== 'ideas') return;
+  if (sug.error) {
+    view.innerHTML = `<section class="col">${pageHead('Ideeënbus', 'ideas')}<p class="msg err">De ideeënbus kon niet geladen worden: ${esc(sug.error.message)}</p></section>`;
+    return;
+  }
+  const count = {}, mine = new Set();
+  for (const v of votes.data || []) {
+    count[v.suggestion_id] = (count[v.suggestion_id] || 0) + 1;
+    if (v.user_id === uid) mine.add(v.suggestion_id);
+  }
+  const ids = [...new Set(sug.data.map(s => s.user_id))];
+  const names = {};
+  if (ids.length) {
+    const { data: profs } = await sb.from('profiles').select('id, display_name').in('id', ids);
+    for (const p of profs || []) names[p.id] = p.display_name;
+  }
+  const rank = { open: 0, planned: 1, done: 2, rejected: 3 };
+  const list = [...sug.data].sort((a, b) => ideaState.sort === 'new'
+    ? b.created_at.localeCompare(a.created_at)
+    : (rank[a.status] > 1) - (rank[b.status] > 1) || (count[b.id] || 0) - (count[a.id] || 0) || b.created_at.localeCompare(a.created_at));
+  const when = d => new Date(d).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short' });
+
+  view.innerHTML = `<section class="col" style="max-width:none">
+    ${pageHead('Ideeënbus', 'ideas')}
+    <div class="two-col ideas-grid">
+      <div>
+        <form id="ideaForm" class="form" style="margin-top:0">
+          <label>Jouw idee<textarea id="ideaBody" rows="4" maxlength="500" placeholder="Wat zou de site nog leuker maken?"></textarea></label>
+          <div class="battle-bar"><button class="btn small" type="submit">Idee indienen</button><small class="hint" id="ideaLen" style="margin:0">0/500</small></div>
+          <p class="msg tmsg" id="ideaMsg" role="alert"></p>
+        </form>
+      </div>
+      <div>
+        <div class="battle-bar" style="margin-bottom:8px">
+          <h3 style="margin:0">Ideeën (${list.length})</h3>
+          <div class="seg">
+            <button type="button" data-sort="votes" class="${ideaState.sort === 'votes' ? 'on' : ''}">Populair</button>
+            <button type="button" data-sort="new" class="${ideaState.sort === 'new' ? 'on' : ''}">Nieuwste</button>
+          </div>
+        </div>
+        <div class="idea-list">${list.length ? list.map(s => {
+          const st = IDEA_STATUS[s.status] || IDEA_STATUS.open;
+          return `<div class="idea status-${s.status}">
+            <button type="button" class="vote${mine.has(s.id) ? ' on' : ''}" data-vote="${s.id}" aria-pressed="${mine.has(s.id)}" aria-label="Upvote">
+              <span class="vote-arrow">▲</span><span class="vote-n">${count[s.id] || 0}</span></button>
+            <div class="idea-main">
+              <p class="idea-body">${esc(s.body)}</p>
+              <div class="idea-meta">
+                ${state.isAdmin ? '' : `<span class="idea-status">${st.icon} ${st.label}</span>`}
+                <span>${esc(names[s.user_id] || '…')} · ${when(s.created_at)}</span>
+                ${state.isAdmin ? `<select class="idea-set" data-status="${s.id}" aria-label="Status">
+                    ${Object.entries(IDEA_STATUS).map(([k, v]) => `<option value="${k}"${k === s.status ? ' selected' : ''}>${v.icon} ${v.label}</option>`).join('')}
+                  </select>` : ''}
+                ${s.user_id === uid || state.isAdmin ? `<button type="button" class="link danger" data-del-idea="${s.id}">Verwijderen</button>` : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('') : '<p class="hint">Nog geen ideeën. Wees de eerste!</p>'}</div>
+      </div>
+    </div>
+  </section>`;
+
+  const body = $('#ideaBody'), msg = $('#ideaMsg');
+  body.oninput = () => { $('#ideaLen').textContent = `${body.value.length}/500`; };
+  $('#ideaForm').onsubmit = async e => {
+    e.preventDefault();
+    const text = body.value.trim();
+    if (text.length < 3) { msg.className = 'msg tmsg err'; msg.textContent = 'Schrijf minstens een paar woorden.'; return; }
+    const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
+    const { data, error } = await sb.from('suggestions').insert({ body: text }).select('id').single();
+    if (error) { msg.className = 'msg tmsg err'; msg.textContent = error.message; btn.disabled = false; return; }
+    await sb.from('suggestion_votes').insert({ suggestion_id: data.id }); // je stemt meteen op je eigen idee
+    ideaState.sort = 'new';
+    renderIdeas(view);
+  };
+  view.querySelectorAll('[data-sort]').forEach(b => { b.onclick = () => { ideaState.sort = b.dataset.sort; renderIdeas(view); }; });
+  view.querySelectorAll('[data-vote]').forEach(b => b.onclick = async () => {
+    const id = Number(b.dataset.vote), on = b.classList.contains('on');
+    b.disabled = true;
+    // Meteen tonen, daarna opslaan
+    const n = b.querySelector('.vote-n');
+    b.classList.toggle('on', !on); n.textContent = Number(n.textContent) + (on ? -1 : 1);
+    const { error } = on
+      ? await sb.from('suggestion_votes').delete().eq('suggestion_id', id).eq('user_id', uid)
+      : await sb.from('suggestion_votes').insert({ suggestion_id: id });
+    b.disabled = false;
+    if (error) { alert(error.message); renderIdeas(view); }
+  });
+  view.querySelectorAll('[data-status]').forEach(sel => sel.onchange = async () => {
+    const { error } = await sb.from('suggestions').update({ status: sel.value }).eq('id', Number(sel.dataset.status));
+    if (error) alert(error.message);
+    renderIdeas(view);
+  });
+  view.querySelectorAll('[data-del-idea]').forEach(b => b.onclick = async () => {
+    if (!confirm('Dit idee verwijderen?')) return;
+    const { error } = await sb.from('suggestions').delete().eq('id', Number(b.dataset.delIdea));
+    if (error) alert(error.message);
+    renderIdeas(view);
   });
 }
 
