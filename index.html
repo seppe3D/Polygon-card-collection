@@ -473,6 +473,10 @@ a{color:var(--amber-soft)}
 .battle-log{list-style:none;margin:16px 0 0;padding:12px 16px;max-width:640px;max-height:240px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);font-size:14.5px;display:grid;gap:4px}
 .battle-log li{color:var(--ink-soft)}
 .battle-log .who{display:inline-block;min-width:74px;font-weight:700}
+.battle-log .round-block{list-style:none;padding:4px 0 6px;border-bottom:1px solid var(--line)}
+.battle-log .round-block:last-child{border-bottom:0}
+.battle-log .round-title{font:800 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--yellow-soft);margin-bottom:2px}
+.battle-log .round-lines{list-style:none;margin:0;padding:0;display:grid;gap:2px}
 .battle-log li.mine{color:var(--green-soft)}
 .battle-log li.theirs{color:#F0B3AB}
 .battle-log li.ko-line{color:#fff}
@@ -1040,7 +1044,7 @@ const INFO = {
     <li>🛡️ <strong>Verdedigen</strong>: je krijgt deze ronde maar de helft van de schade, +2 ⚡.</li>
     <li>★ <strong>Special</strong> (legendaries): vaste zware schade die door verdediging gaat, kost 4 ⚡.</li>
     <li>🔄 <strong>Wisselen</strong>: ruil je kaart met een kaart van je bank. Gebeurt vóór de aanvallen, +1 ⚡.</li></ul>
-    <p>De kaart met de hoogste ATK valt eerst aan. Valt een kaart uit, dan komt de volgende uit je team erin. Wie eerst 3 kaarten verliest, verliest.</p>
+    <p>Elke ronde gebeuren eerst de wissels, daarna valt de kaart met de hoogste ATK eerst aan — die mag dus elke ronde als eerste slaan. Valt een kaart uit, dan komt de volgende uit je team erin. Wie eerst 3 kaarten verliest, verliest.</p>
     <p><strong>Polycoins</strong>: computer makkelijk/normaal/moeilijk = 5/10/20 (max 5 per dag). Tegen een vriend: winnaar 25, verliezer 5 (max 3 per dag). Opgeven levert niets op.</p>`],
   friends: ['Vrienden', `
     <p>Deel je code met collega's, of voer hun code in om een vriendschapsverzoek te sturen.</p>
@@ -2538,13 +2542,21 @@ async function openBattle(view, id, prev = null) {
     $('#side-op').innerHTML = sideHtml(b, op, disp[op], false);
   };
   const log = $('#battleLog');
+  // Verslag per ronde: nieuwste ronde bovenaan, binnen een ronde in volgorde van gebeuren
   const addLog = (e) => {
     const t = eventText(e, b, names);
     if (!t) return;
+    let block = log.querySelector(`[data-round="${e.r}"]`);
+    if (!block) {
+      block = document.createElement('li');
+      block.className = 'round-block'; block.dataset.round = e.r;
+      block.innerHTML = `<div class="round-title">Ronde ${e.r}</div><ol class="round-lines"></ol>`;
+      log.prepend(block);
+    }
     const li = document.createElement('li');
     li.innerHTML = t; li.className = e.s === me ? 'mine' : e.s ? 'theirs' : 'ko-line';
     if (e.t === 'ko' || e.t === 'end') li.className = 'ko-line';
-    log.prepend(li);
+    block.querySelector('.round-lines').appendChild(li);
   };
   // Oude gebeurtenissen meteen in het verslag (zonder animatie)
   const cutoff = newEvents.length ? prev.round : Infinity;
