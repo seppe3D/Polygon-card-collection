@@ -100,8 +100,8 @@ update public.cards set
 where person = 'Ale' and slot = 6;
 
 update public.cards set
-  name = 'Pura Vida Office', image_url = 'cards/ale-7.jpg',
-  flavor_text = 'Pura vida, even on a Monday.'
+  name = 'Pura Vida Fiesta', image_url = 'cards/ale-7.jpg',
+  flavor_text = 'Gallo pinto for breakfast. Pura vida all day.'
 where person = 'Ale' and slot = 7;
 
 update public.cards set
