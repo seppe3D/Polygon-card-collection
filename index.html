@@ -1377,6 +1377,9 @@ function bookGroups() {
     g.cards.push(c);
   }
   for (const g of groups) g.cards.sort((a, b) => a.slot - b.slot);
+  // Troostkatten altijd na de collega's, ook als er later nieuwe collega's bijkomen
+  const cats = groups.findIndex(g => g.name === 'Katten');
+  if (cats >= 0) groups.push(...groups.splice(cats, 1));
   // Extra pagina achteraan met alle kaarten die je meer dan één keer hebt
   const dupeCards = state.cards
     .filter(c => (state.owned.get(c.id) || 0) > 1)
