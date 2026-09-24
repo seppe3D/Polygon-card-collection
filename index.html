@@ -118,6 +118,37 @@ a{color:var(--amber-soft)}
 .infobox ul{padding-left:20px;margin:8px 0 12px}
 .infobox .link{padding-left:0}
 
+/* Eigen Wordle: rondes, speelbord en toetsenbord */
+.round-tabs{display:flex;gap:8px;margin-bottom:14px;max-width:520px}
+.round-tab{flex:1;display:grid;gap:1px;text-align:left;background:rgba(35,41,50,.88);border:2px solid var(--line);border-radius:14px;padding:8px 14px;color:var(--ink);font:800 15px var(--body);cursor:pointer;transition:border-color .15s,background .15s}
+.round-tab small{font:600 12.5px var(--body);color:var(--ink-soft)}
+.round-tab.active{border-color:var(--yellow);background:rgba(201,180,88,.16)}
+.round-tab.done small{color:var(--green-soft)}
+.wboard{display:grid;gap:6px;width:min(300px,100%,calc((100vh - 400px) * .86));min-width:220px;margin:0 auto 8px}
+.wrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.wrow.shake{animation:shake .4s ease}
+.wtile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:10px;background:rgba(21,24,29,.65);
+  color:#fff;font:800 clamp(20px,5.5vw,28px)/1 var(--display);text-transform:uppercase;user-select:none}
+.wtile.filled{border-color:var(--grey-soft);animation:tile-pop .12s ease}
+.wtile.g{background:var(--green);border-color:var(--green)}
+.wtile.y{background:var(--yellow);border-color:var(--yellow)}
+.wtile.x{background:#3a414c;border-color:#3a414c}
+.wtile.flip{animation:wflip .5s ease-in-out both;animation-delay:calc(var(--i) * .22s)}
+@keyframes wflip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@keyframes tile-pop{50%{transform:scale(1.1)}}
+.wmsg{text-align:center;min-height:1.4em;margin:0 auto 8px;max-width:420px}
+.wkeys{display:grid;gap:6px;width:min(500px,100%);margin:0 auto}
+.wkrow{display:flex;gap:5px;justify-content:center}
+.wkey{flex:1;max-width:44px;height:clamp(40px,6.2vh,52px);border:0;border-radius:8px;background:#5a616d;color:#fff;font:800 15px var(--body);cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.35);padding:0;touch-action:manipulation;transition:transform .08s}
+.wkey:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.wkey.wide{flex:1.6;max-width:70px;font-size:13px}
+.wkey.g{background:var(--green)} .wkey.y{background:var(--yellow);color:#15181D} .wkey.x{background:#2b3038;color:#7d8591}
+.round-closed{text-align:center;padding:36px 10px;background:rgba(35,41,50,.7);border:1px solid var(--line);border-radius:var(--r);max-width:520px}
+.big-lock{font-size:52px;line-height:1;margin-bottom:10px}
+.countdown{font:800 30px var(--display);color:var(--yellow-soft);margin:6px 0 0}
+@media (prefers-reduced-motion:reduce){.wtile.flip,.wtile.filled{animation:none}}
+
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
 .today-grid{display:grid;gap:32px;align-items:start}
 .today-grid .col{max-width:none}
@@ -622,10 +653,9 @@ async function route() {
 
 async function loadData() {
   const uid = state.session.user.id;
-  const [cards, mine, play, prof, wallet, requests, admin, battlesIn, welcome] = await Promise.all([
+  const [cards, mine, prof, wallet, requests, admin, battlesIn, welcome] = await Promise.all([
     sb.from('cards').select('*').order('id'),
     sb.from('user_cards').select('card_id').eq('user_id', uid),
-    sb.from('daily_plays').select('*').eq('user_id', uid).eq('play_date', todayBrussels()).maybeSingle(),
     sb.from('profiles').select('display_name, avatar_url, friend_code').eq('id', uid).maybeSingle(),
     sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
     sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid),
@@ -633,7 +663,7 @@ async function loadData() {
     sb.from('battles').select('id', { count: 'exact', head: true }).eq('opponent_id', uid).eq('status', 'pending'),
     sb.from('welcome_packs').select('user_id').eq('user_id', uid).maybeSingle()
   ]);
-  for (const r of [cards, mine, play, prof, wallet]) if (r.error) throw new Error(r.error.message);
+  for (const r of [cards, mine, prof, wallet]) if (r.error) throw new Error(r.error.message);
   // Niet fataal: enkel voor het bolletje op de Vrienden-tab
   state.incomingRequests = requests.error ? 0 : (requests.count || 0);
   // Admin ziet alle kaarten ontgrendeld (enkel weergave; echte bezittingen blijven ongewijzigd)
@@ -644,7 +674,6 @@ async function loadData() {
   state.cards = cards.data;
   state.owned = new Map();
   for (const row of mine.data) state.owned.set(row.card_id, (state.owned.get(row.card_id) || 0) + 1);
-  state.play = play.data;
   state.name = prof.data?.display_name || state.session.user.email.split('@')[0];
   state.avatarUrl = prof.data?.avatar_url || null;
   state.friendCode = prof.data?.friend_code || '';
@@ -918,11 +947,11 @@ function syncFriendBadge() { setBadge('[data-friend-badge]', state.incomingReque
 // ---------- Uitleg achter een info-icoontje ----------
 const INFO = {
   today: ['Hoe werkt het?', `
-    <p>Los de Wordle van vandaag op, klik in Discord op <strong>Share</strong> en plak het resultaat. Vul ook het woord in dat je geraden hebt — zo weten we zeker dat je de Wordle echt opgelost hebt.</p>
-    <ul><li>Je trekt <strong>één pakje per dag</strong>.</li>
-    <li>Hoe minder pogingen, hoe zeldzamer je kaart.</li>
-    <li>Heb je de kaart al? Dan krijg je ze als dubbel om te ruilen, plus wat polycoins.</li>
-    <li>Niet opgelost? Dan krijg je een troostkat.</li></ul>
+    <p>Elke dag zijn er <strong>2 Wordles</strong>: de ochtendronde vanaf <strong>08:00</strong> en de middagronde vanaf <strong>13:00</strong> (Belgische tijd). Iedereen krijgt per ronde hetzelfde geheime woord — het is niet de officiële Wordle, dus opzoeken helpt niet.</p>
+    <ul><li>Raad het Engelse woord van 5 letters in maximaal 6 pogingen. Typ of gebruik het toetsenbord op het scherm.</li>
+    <li>🟩 juiste letter op de juiste plek · 🟨 letter zit in het woord, maar elders · ⬛ letter zit er niet in.</li>
+    <li>Na elke ronde open je een pakje. Hoe minder pogingen, hoe zeldzamer je kaart.</li>
+    <li>Heb je de kaart al? Dan krijg je ze als dubbel om te ruilen, plus wat polycoins. Niet opgelost? Dan krijg je een troostkat.</li></ul>
     <table class="odds-table">
       <thead><tr><th>Pogingen</th><th>Common</th><th>Epic</th><th>Legendary</th></tr></thead>
       <tbody>
@@ -939,7 +968,7 @@ const INFO = {
     <p>Elke collega heeft een eigen pagina met 9 kaarten: 6 commons, 2 epics en 1 legendary. Troostkatten krijgen hun eigen pagina.</p>
     <ul><li>Klik op een kaart om ze groot te bekijken, tik nog eens om ze om te draaien.</li>
     <li>Achteraan vind je de pagina <strong>Dubbels</strong> met alle kaarten die je meer dan één keer hebt.</li></ul>`],
-  stats: ['Statistieken', `<p>Een overzicht van al je Wordle-trekkingen: hoe vaak je speelde, je huidige streak (opeenvolgende dagen), hoe vaak je de Wordle oploste en in hoeveel pogingen.</p>`],
+  stats: ['Statistieken', `<p>Een overzicht van al je Wordles (2 per dag): hoe vaak je speelde, je huidige streak (opeenvolgende dagen), hoe vaak je de Wordle oploste en in hoeveel pogingen.</p>`],
   battle: ['Zo werkt Battle', `
     <p>Kies 3 kaarten, in de volgorde waarin ze vechten.</p>
     <ul><li>De actieve kaarten slaan om beurten: hoe hoger je ATK en hoe lager de DEF van de tegenstander, hoe meer schade. Soms is het een voltreffer.</li>
@@ -1198,73 +1227,224 @@ function renderView() {
   else if (state.tab === 'trade') renderTrade(view);
 }
 
-// ---------- Tab: Vandaag ----------
-function playSummary(play) {
-  return play.solved
-    ? `Opgelost in ${play.attempts} ${plural(play.attempts)}.`
-    : 'Niet opgelost vandaag. Je kreeg een troostkat.';
+// ---------- Tab: Today — eigen Wordle, 2 rondes per dag ----------
+// Het woord blijft in Supabase: elke gok gaat naar wordle_guess(), die enkel de kleurtjes teruggeeft.
+const ROUNDS = { 1: { icon: '☀️', name: 'Ochtend' }, 2: { icon: '🌤️', name: 'Middag' } };
+const KB_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', '⏎ZXCVBNM⌫'];
+const wordle = { data: null, slot: null, input: '', busy: false, timer: null, loadedAt: 0 };
+let WORDS = null; // geldige gokwoorden (words.txt), één keer geladen
+
+async function loadWords() {
+  if (!WORDS) {
+    const res = await fetch('words.txt');
+    if (!res.ok) throw new Error('Woordenlijst kon niet geladen worden.');
+    WORDS = new Set((await res.text()).split('\n').map(w => w.trim().toUpperCase()).filter(Boolean));
+  }
+  return WORDS;
 }
 
-function renderToday(view) {
-  if (state.play) {
-    const card = state.cards.find(c => c.id === state.play.card_id);
-    view.innerHTML = `${welcomeBanner()}<section class="today-grid">
-      <div class="col">
-        ${pageHead('Vandaag is gedaan', 'today')}
-        <p class="hint">${playSummary(state.play)} Morgen kan je opnieuw een pakje openen.</p>
-      </div>
-      <div class="stage" id="stage">${card ? `<div class="cardflip">${renderCard(card)}</div>` : ''}</div>
-    </section>`;
+const isDone = s => s.status === 'won' || s.status === 'lost';
+const fmtDuration = sec => {
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return h ? `${h}u ${String(m).padStart(2, '0')}m` : `${m}m ${String(s).padStart(2, '0')}s`;
+};
+function roundStatus(s) {
+  if (!s.open) return `🔒 opent om ${s.opens}`;
+  if (s.status === 'won') return `✓ opgelost in ${s.attempts}/6`;
+  if (s.status === 'lost') return '✗ niet opgelost';
+  if (s.rows.length) return `bezig · ${s.rows.length}/6`;
+  return 'klaar om te spelen';
+}
+function roundSummary(s) {
+  if (s.status === 'won') return `Opgelost in ${s.attempts} ${plural(s.attempts)}! Je pakje is geopend.`;
+  if (s.status === 'lost') return `Niet opgelost. Het woord was <strong>${esc(s.answer || '?')}</strong>. Je kreeg een troostkat.`;
+  return '';
+}
+
+function boardHtml(s) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const row = s.rows[i];
+    const letters = row ? row.w : (i === s.rows.length && !isDone(s) ? wordle.input : '');
+    return `<div class="wrow" id="wr-${i}">${Array.from({ length: 5 }, (_, j) => {
+      const ch = letters[j] || '';
+      const cls = row ? ` ${row.r[j]}` : ch ? ' filled' : '';
+      return `<div class="wtile${cls}">${esc(ch)}</div>`;
+    }).join('')}</div>`;
+  }).join('');
+}
+
+function keyboardHtml(s) {
+  const rank = { g: 3, y: 2, x: 1 }, best = {};
+  for (const row of s.rows) [...row.w].forEach((ch, i) => {
+    const r = row.r[i];
+    if (!best[ch] || rank[r] > rank[best[ch]]) best[ch] = r;
+  });
+  return KB_ROWS.map(row => `<div class="wkrow">${[...row].map(k => {
+    const wide = k === '⏎' || k === '⌫';
+    const label = k === '⏎' ? 'Enter' : k;
+    return `<button type="button" class="wkey${wide ? ' wide' : ''}${best[k] ? ' ' + best[k] : ''}" data-key="${k}" aria-label="${k === '⌫' ? 'Wissen' : label}">${label}</button>`;
+  }).join('')}</div>`).join('');
+}
+
+async function renderToday(view) {
+  clearInterval(wordle.timer);
+  view.innerHTML = `${welcomeBanner()}<section class="col"><p class="hint">Wordle laden…</p></section>`;
+  attachWelcome();
+  const [{ data, error }] = await Promise.all([sb.rpc('wordle_state'), loadWords().catch(() => null)]);
+  if (state.tab !== 'today') return;
+  if (error) {
+    view.innerHTML = `${welcomeBanner()}<section class="col">${pageHead('Wordle', 'today')}<p class="msg err">De Wordle kon niet geladen worden: ${esc(error.message)}</p></section>`;
     attachWelcome();
     return;
   }
+  wordle.data = data;
+  wordle.loadedAt = Date.now();
+  if (!data.slots.some(s => s.slot === wordle.slot)) wordle.slot = null;
+  if (!wordle.slot) {
+    const playable = data.slots.find(s => s.open && !isDone(s));
+    wordle.slot = playable ? playable.slot : ([...data.slots].reverse().find(s => s.open)?.slot || 1);
+  }
+  wordle.input = '';
+  drawToday(view);
+}
+
+function drawToday(view) {
+  const slots = wordle.data.slots;
+  const s = slots.find(x => x.slot === wordle.slot);
+  const card = s.card_id ? state.cards.find(c => c.id === s.card_id) : null;
   view.innerHTML = `${welcomeBanner()}<section class="today-grid">
     <div class="col">
-      ${pageHead('Wordle van vandaag', 'today')}
-      <div id="uploadbox" class="form">
-        <label for="sharetext">Wordle-resultaat<textarea id="sharetext" rows="5" placeholder="Plak hier je gedeelde Wordle-resultaat"></textarea></label>
-        <label for="word">Het geraden woord<input id="word" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
-        <button class="btn" id="go" disabled>Pakje openen</button>
-        <p id="msg" role="alert" class="msg"></p>
-      </div>
+      ${pageHead('Wordle', 'today')}
+      <div class="round-tabs" id="roundTabs">${roundTabsHtml()}</div>
+      ${s.open ? `
+        <div class="wboard" id="wboard">${boardHtml(s)}</div>
+        <p class="msg wmsg${isDone(s) ? ' ok' : ''}" id="wmsg" role="alert">${roundSummary(s)}</p>
+        ${isDone(s) ? '' : `<div class="wkeys" id="wkeys">${keyboardHtml(s)}</div>`}`
+      : `<div class="round-closed">
+          <div class="big-lock" aria-hidden="true">🔒</div>
+          <p>De ${ROUNDS[s.slot].name.toLowerCase()}-Wordle opent om <strong>${s.opens}</strong> (Belgische tijd).</p>
+          <p class="countdown" id="wcount"></p>
+        </div>`}
     </div>
-    <div class="stage" id="stage" aria-live="polite"><p class="stage-placeholder">Hier verschijnt je kaart zodra je 'm trekt.</p></div>
+    <div class="stage" id="stage" aria-live="polite">${card
+      ? `<div class="cardflip">${renderCard(card)}</div>`
+      : '<p class="stage-placeholder">Los de Wordle op en open je pakje.</p>'}</div>
   </section>`;
-  const checkReady = () => {
-    $('#go').disabled = $('#sharetext').value.trim().length < 10 || $('#word').value.trim().length !== 5;
-    $('#msg').textContent = '';
-  };
   attachWelcome();
-  $('#sharetext').oninput = checkReady;
-  $('#word').oninput = checkReady;
-  $('#go').onclick = async () => {
-    const msg = $('#msg'), go = $('#go');
-    go.disabled = true; msg.className = 'msg'; msg.textContent = 'Resultaat controleren…';
-    try {
-      const text = $('#sharetext').value;
-      const word = $('#word').value;
-      const { data, error } = await sb.functions.invoke('submit-wordle', { body: { text, word } });
-      if (error) {
-        let errText = 'Er ging iets mis. Probeer het opnieuw.';
-        try { errText = (await error.context.json()).error || errText; } catch (_) {}
-        throw new Error(errText);
+  bindRoundTabs(view);
+  // Eén handler op het hele toetsenbord: blijft werken als de toetsen opnieuw getekend worden
+  const keys = $('#wkeys');
+  if (keys) keys.onclick = e => { const b = e.target.closest('[data-key]'); if (b) wordleKey(b.dataset.key); };
+
+  // Aftellen tot een ronde opent; op 0 herladen we de rondes
+  clearInterval(wordle.timer);
+  const waits = slots.filter(x => !x.open).map(x => wordle.loadedAt + x.seconds_until_open * 1000);
+  if (waits.length) {
+    const openAt = Math.min(...waits);
+    const tick = () => {
+      const left = Math.max(0, Math.round((openAt - Date.now()) / 1000));
+      const el = $('#wcount');
+      if (el) el.textContent = `Nog ${fmtDuration(left)}`;
+      if (left === 0) {
+        clearInterval(wordle.timer);
+        if (state.tab === 'today' && $('#roundTabs')) renderToday(view);
       }
-      state.play = { solved: data.solved, attempts: data.attempts, card_id: data.card.id, play_date: todayBrussels() };
-      // cardAdded: nieuwe Edge Function (v3) voegt ook dubbels toe; de oude enkel nieuwe kaarten
-      if (data.cardAdded ?? !data.isDuplicate) {
-        state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
-      }
-      if (data.coinsEarned) {
-        state.wallet += data.coinsEarned;
-        syncCoinUI();
-      }
-      $('#uploadbox').hidden = true;
-      await revealCard(data);
-    } catch (err) {
-      msg.className = 'msg err'; msg.textContent = err.message; go.disabled = false;
-    }
-  };
+    };
+    tick();
+    wordle.timer = setInterval(tick, 1000);
+  }
 }
+
+function roundTabsHtml() {
+  return wordle.data.slots.map(x => `<button type="button" class="round-tab${x.slot === wordle.slot ? ' active' : ''}${isDone(x) ? ' done' : ''}" data-round="${x.slot}">
+    <span>${ROUNDS[x.slot].icon} ${ROUNDS[x.slot].name}</span><small>${roundStatus(x)}</small></button>`).join('');
+}
+function bindRoundTabs(view) {
+  view.querySelectorAll('[data-round]').forEach(b => {
+    b.onclick = () => {
+      if (wordle.busy) return;
+      wordle.slot = Number(b.dataset.round); wordle.input = '';
+      drawToday(view);
+    };
+  });
+}
+
+function currentRound() {
+  if (state.tab !== 'today' || !wordle.data || !$('#wboard')) return null;
+  return wordle.data.slots.find(x => x.slot === wordle.slot) || null;
+}
+
+function wordleKey(k) {
+  const s = currentRound();
+  if (!s || !s.open || isDone(s) || wordle.busy) return;
+  if (k === '⌫') { wordle.input = wordle.input.slice(0, -1); return drawInputRow(s); }
+  if (k === '⏎') return submitGuess(s);
+  if (/^[A-Z]$/.test(k) && wordle.input.length < 5) { wordle.input += k; drawInputRow(s); }
+}
+
+function drawInputRow(s) {
+  const row = $(`#wr-${s.rows.length}`);
+  if (!row) return;
+  [...row.children].forEach((t, i) => {
+    t.textContent = wordle.input[i] || '';
+    t.className = 'wtile' + (wordle.input[i] ? ' filled' : '');
+  });
+}
+
+async function submitGuess(s) {
+  const msg = $('#wmsg'), row = $(`#wr-${s.rows.length}`);
+  const fail = text => {
+    msg.className = 'msg wmsg err'; msg.textContent = text;
+    row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+  };
+  if (wordle.input.length < 5) return fail('Te weinig letters.');
+  if (WORDS && !WORDS.has(wordle.input)) return fail('Dat woord staat niet in de woordenlijst.');
+  wordle.busy = true;
+  msg.className = 'msg wmsg'; msg.textContent = '';
+  const { data, error } = await sb.rpc('wordle_guess', { p_slot: s.slot, p_guess: wordle.input });
+  if (error) { wordle.busy = false; return fail(error.message); }
+
+  s.rows.push({ w: data.guess, r: data.result });
+  wordle.input = '';
+  // Tegels één voor één omdraaien en halverwege hun kleur tonen
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  [...row.children].forEach((t, i) => {
+    t.textContent = data.guess[i];
+    if (reduce) { t.className = `wtile ${data.result[i]}`; return; }
+    t.className = 'wtile filled flip';
+    t.style.setProperty('--i', i);
+    setTimeout(() => { t.className = `wtile flip ${data.result[i]}`; }, i * 220 + 250);
+  });
+  if (!reduce) await sleep(4 * 220 + 520);
+  if ($('#wkeys')) $('#wkeys').innerHTML = keyboardHtml(s);
+
+  if (data.status !== 'playing') {
+    Object.assign(s, { status: data.status, attempts: data.attempts, card_id: data.card.id, answer: data.answer });
+    state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
+    if (data.coinsEarned) { state.wallet += data.coinsEarned; syncCoinUI(); }
+    $('#wkeys')?.remove();
+    msg.className = 'msg wmsg ok'; msg.innerHTML = roundSummary(s);
+    $('#roundTabs').innerHTML = roundTabsHtml();
+    bindRoundTabs($('#view'));
+    const stage = $('#stage');
+    stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    await revealCard(data);
+  } else {
+    $('#roundTabs').innerHTML = roundTabsHtml();
+    bindRoundTabs($('#view'));
+  }
+  wordle.busy = false;
+}
+
+// Fysiek toetsenbord (één keer geregistreerd, enkel actief op Today tijdens een ronde)
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || document.querySelector('dialog[open]')) return;
+  if (e.target.closest && e.target.closest('input, textarea, select')) return;
+  if (!currentRound()) return;
+  if (e.key === 'Enter') { e.preventDefault(); wordleKey('⏎'); }
+  else if (e.key === 'Backspace') { e.preventDefault(); wordleKey('⌫'); }
+  else if (/^[a-z]$/i.test(e.key)) wordleKey(e.key.toUpperCase());
+});
 
 // Deeltjes rond een net onthulde kaart
 function particlesHtml(rarity) {
@@ -1336,7 +1516,7 @@ async function revealCard(res) {
             ? `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je had "${esc(res.card.name)}" al — nu heb je een dubbel om te ruilen, plus ${res.coinsEarned} polycoins.`
             : `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je had "${esc(res.card.name)}" al — omgezet in ${res.coinsEarned} polycoins.`)
         : `Opgelost in ${res.attempts} ${plural(res.attempts)}. Je trok een ${RARITY_LABEL[res.rarity]}-kaart.`)
-    : 'Niet opgelost vandaag. Je krijgt een troostkat.';
+    : `Niet opgelost${res.answer ? ` — het woord was ${esc(res.answer)}` : ''}. Je krijgt een troostkat.`;
   stage.insertAdjacentHTML('beforeend', `${!reduce && res.rarity === 'legendary' ? confettiHtml() : ''}<p class="result">${text}</p>`);
 }
 
@@ -1442,11 +1622,28 @@ function drawBook(view, groups, animate) {
 }
 
 // ---------- Tab: Statistieken ----------
+// Alle gespeelde Wordles: de oude dagtrekkingen (daily_plays) + de nieuwe rondes (wordle_games)
+async function loadPlays(userId, isFriend = false) {
+  const [old, games] = await Promise.all([
+    sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', userId),
+    isFriend
+      ? sb.rpc('friend_wordle_stats', { p_friend: userId })
+      : sb.from('wordle_games').select('round_date, status, attempts').eq('user_id', userId).neq('status', 'playing'),
+  ]);
+  if (old.error) throw old.error;
+  const rows = [...(old.data || [])];
+  if (!games.error) for (const g of games.data || []) {
+    rows.push(isFriend ? g : { play_date: g.round_date, solved: g.status === 'won', attempts: g.attempts });
+  }
+  return rows.sort((a, b) => (a.play_date < b.play_date ? -1 : a.play_date > b.play_date ? 1 : 0));
+}
+
 async function renderStats(view) {
   view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Statistieken laden…</p></section>`;
   const uid = state.session.user.id;
-  const { data, error } = await sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', uid).order('play_date');
-  if (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
+  let data;
+  try { data = await loadPlays(uid); }
+  catch (error) { view.innerHTML = `<section class="col"><p class="msg err">${esc(error.message)}</p></section>`; return; }
   view.innerHTML = `<section class="col" style="max-width:none">
     ${pageHead('Mijn statistieken', 'stats')}
     ${statsHtml(data || [])}
@@ -1628,7 +1825,7 @@ async function openFriendStats(f) {
   dlg.innerHTML = `<div class="accbox statbox">${head}<p class="hint">Statistieken laden…</p></div>`;
   dlg.showModal();
   const [plays, cards] = await Promise.all([
-    sb.from('daily_plays').select('play_date, solved, attempts').eq('user_id', f.id).order('play_date'),
+    loadPlays(f.id, true).then(data => ({ data }), error => ({ error })),
     sb.from('user_cards').select('card_id').eq('user_id', f.id),
   ]);
   const err = plays.error || cards.error;
