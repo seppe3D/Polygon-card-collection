@@ -25,8 +25,8 @@ update public.cards set
 where person = 'Steffi' and slot = 1;
 
 update public.cards set
-  name = 'Calendar Tetris', image_url = 'cards/steffi-2.jpg',
-  flavor_text = 'There''s always room for one more meeting.'
+  name = 'Desk Fortress', image_url = 'cards/steffi-2.jpg',
+  flavor_text = 'Focus mode: fully fortified.'
 where person = 'Steffi' and slot = 2;
 
 update public.cards set
