@@ -414,24 +414,30 @@ end $$;
 -- 6. Ranglijst (oude + nieuwe gevechten tegen vrienden) ------------------------------------
 create or replace function public.tb_leaderboard()
 returns table (user_id uuid, display_name text, avatar_url text, wins bigint, losses bigint)
-language sql stable security definer set search_path = public as $$
-  with people as (
-    select auth.uid() as id
-    union select f.friend_id from public.friendships f where f.user_id = auth.uid()
-  ),
-  results as (
-    select winner_id as winner, challenger_id as p1, opponent_id as p2 from public.battles where status = 'done'
-    union all
-    select case winner when 'A' then player_a else player_b end, player_a, player_b
-    from public.tbattles where mode = 'pvp' and status = 'done'
-  )
-  select p.id, pr.display_name, pr.avatar_url,
-    (select count(*) from results r where r.winner = p.id),
-    (select count(*) from results r where (r.p1 = p.id or r.p2 = p.id) and r.winner <> p.id)
-  from people p join public.profiles pr on pr.id = p.id
-  where auth.uid() is not null
-  order by 4 desc, 5 asc, 2;
-$$;
+language plpgsql stable security definer set search_path = public as $$
+declare
+  -- De oude gevechtentabel (schema-v6) telt enkel mee als die bestaat
+  old_sql text := case when to_regclass('public.battles') is not null then
+    'select winner_id as winner, challenger_id as p1, opponent_id as p2 from public.battles where status = ''done'' union all '
+    else '' end;
+begin
+  if auth.uid() is null then return; end if;
+  return query execute
+    'with people as (
+       select $1 as id
+       union select f.friend_id from public.friendships f where f.user_id = $1
+     ),
+     results as (' || old_sql || '
+       select case winner when ''A'' then player_a else player_b end as winner, player_a as p1, player_b as p2
+       from public.tbattles where mode = ''pvp'' and status = ''done''
+     )
+     select p.id, pr.display_name, pr.avatar_url,
+       (select count(*) from results r where r.winner = p.id),
+       (select count(*) from results r where (r.p1 = p.id or r.p2 = p.id) and r.winner <> p.id)
+     from people p join public.profiles pr on pr.id = p.id
+     order by 4 desc, 5 asc, 2'
+  using auth.uid();
+end $$;
 
 -- Hoeveel beloonde overwinningen heb ik vandaag nog?
 create or replace function public.tb_rewards_today()
