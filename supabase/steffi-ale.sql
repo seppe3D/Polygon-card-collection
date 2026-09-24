@@ -70,33 +70,33 @@ where person = 'Steffi' and slot = 9;
 -- ===================== ALE =====================
 
 update public.cards set
-  name = 'Stand-Up Meeting', image_url = 'cards/ale-1.jpg',
-  flavor_text = 'Attendance optional. Enthusiasm mandatory.'
+  name = 'Board of Directors', image_url = 'cards/ale-1.jpg',
+  flavor_text = 'Tough crowd. Tougher bread budget.'
 where person = 'Ale' and slot = 1;
 
 update public.cards set
-  name = 'Snack Drawer Avalanche', image_url = 'cards/ale-2.jpg',
-  flavor_text = 'Just one more cookie, he said.'
+  name = 'The Snack Kraken', image_url = 'cards/ale-2.jpg',
+  flavor_text = 'Release the snacks.'
 where person = 'Ale' and slot = 2;
 
 update public.cards set
-  name = 'The Human Coat Rack', image_url = 'cards/ale-3.jpg',
-  flavor_text = 'Nobody asked. Everybody used.'
+  name = 'Promoted to Coat Rack', image_url = 'cards/ale-3.jpg',
+  flavor_text = 'Nobody asked. Everybody hangs.'
 where person = 'Ale' and slot = 3;
 
 update public.cards set
-  name = 'Password Expired', image_url = 'cards/ale-4.jpg',
-  flavor_text = 'Must contain a symbol, a number and a miracle.'
+  name = 'Password Guardian', image_url = 'cards/ale-4.jpg',
+  flavor_text = 'Must contain a symbol, a number and a sacrifice.'
 where person = 'Ale' and slot = 4;
 
 update public.cards set
-  name = 'Hot Desk', image_url = 'cards/ale-5.jpg',
-  flavor_text = 'First come, first scorched.'
+  name = 'Hot-Air Desk', image_url = 'cards/ale-5.jpg',
+  flavor_text = 'Working from above.'
 where person = 'Ale' and slot = 5;
 
 update public.cards set
-  name = 'Out of Toner', image_url = 'cards/ale-6.jpg',
-  flavor_text = 'The printer won. This time.'
+  name = 'Copy Machine', image_url = 'cards/ale-6.jpg',
+  flavor_text = 'Now available in triplicate.'
 where person = 'Ale' and slot = 6;
 
 update public.cards set
@@ -105,8 +105,8 @@ update public.cards set
 where person = 'Ale' and slot = 7;
 
 update public.cards set
-  name = 'Unplugged Session', image_url = 'cards/ale-8.jpg',
-  flavor_text = 'One more song, then the budget review.'
+  name = 'Moonlight Session', image_url = 'cards/ale-8.jpg',
+  flavor_text = 'The turtles came for the encore.'
 where person = 'Ale' and slot = 8;
 
 update public.cards set
