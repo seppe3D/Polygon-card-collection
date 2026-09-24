@@ -941,12 +941,12 @@ const TABS = [
   { id: 'battle', label: 'Battle', icon: '⚔️', badge: 'battle' },
   { id: 'friends', label: 'Friends', icon: '👥', badge: 'friend' },
   { id: 'trade', label: 'Trade', icon: '🔁' },
-  { id: 'shop', label: 'Shop', icon: '🛒' },
 ];
 
 function renderMain() {
   const initial = esc((state.name || '?').trim().charAt(0).toUpperCase());
   const avStyle = state.avatarUrl ? ` style="background-image:url('${esc(state.avatarUrl)}')"` : '';
+  if (!TABS.some(t => t.id === state.tab)) state.tab = 'today';
   const cur = TABS.find(t => t.id === state.tab) || TABS[0];
   app.innerHTML = `
   <div class="wrap wide" id="wrap">
@@ -1290,7 +1290,6 @@ function renderView() {
   else if (state.tab === 'battle') renderBattle(view);
   else if (state.tab === 'friends') renderFriends(view);
   else if (state.tab === 'trade') renderTrade(view);
-  else if (state.tab === 'shop') renderShop(view);
 }
 
 // ---------- Tab: Today — eigen Wordle, 2 rondes per dag ----------
