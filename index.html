@@ -364,6 +364,42 @@ a{color:var(--amber-soft)}
 
 /* Battle */
 .battle-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.battle-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.battle-top .page-head{margin-bottom:6px}
+.diff-btn small,#challengeBattle small{font-weight:700;opacity:.8;margin-left:4px}
+.bt-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.bt-head h2{margin:0}
+.bt-head .link{padding-left:0}
+.bt-layout{display:grid;gap:18px;align-items:start}
+@media (min-width:1000px){.bt-layout{grid-template-columns:auto minmax(0,1fr)}.bt-layout .battle-log{max-height:470px}.bt-layout .battle-result{margin-top:0}}
+.bt-arena{width:min(600px,100%);grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+.bt-side{min-width:0}
+.bt-name{font:800 15px var(--body);color:var(--ink-soft)}
+.bt-side .fighter-card{max-width:min(190px,calc((100vh - 470px) * .714))}
+.energy{display:flex;gap:2px}
+.energy .pip{font-size:15px;filter:grayscale(1);opacity:.3}
+.energy .pip.on{filter:none;opacity:1}
+.bt-side .bench{display:grid;gap:5px;width:100%;max-width:210px}
+.bench-card{display:flex;justify-content:space-between;gap:8px;min-width:0;padding:5px 9px;border-radius:10px;border:1px solid var(--line);background:rgba(35,41,50,.9);color:var(--ink);font:600 13px var(--body);text-align:left}
+.bench-card span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bench-card .bench-hp{color:var(--green-soft);white-space:nowrap}
+.bench-card.out{opacity:.4}
+.bench-card.out .bench-hp{color:#F0897E}
+.bench-card:disabled{cursor:default}
+.bt-side.choosing .bench-card:not(:disabled){cursor:pointer;border-color:var(--yellow);box-shadow:0 0 0 2px rgba(201,180,88,.35);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(201,180,88,.15)}}
+.bt-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:stretch;width:min(600px,100%)}
+.move-btn{display:grid;justify-items:center;align-content:center;gap:1px;min-width:96px;flex:1;padding:7px 8px;border:0;border-radius:14px;background:var(--yellow);color:#15181D;font:800 14.5px var(--body);cursor:pointer;
+  box-shadow:0 4px 0 #8f7f35;transition:transform .1s ease,box-shadow .1s ease}
+.move-btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #8f7f35}
+.move-btn:disabled{opacity:.35;cursor:not-allowed}
+.move-btn .move-icon{font-size:18px;line-height:1}
+@media (max-width:560px){.move-btn{min-width:calc(50% - 4px)}.bt-head h2{font-size:20px}.bt-arena .vs{font-size:16px}}
+.bt-head .forfeit{margin-left:auto}
+.move-btn small{font:600 11.5px var(--body);opacity:.75}
+.move-btn[data-move="special"]{background:linear-gradient(135deg,#F5D97A,#C99A1E)}
+.move-btn[data-move="guard"]{background:#8fb3d9;box-shadow:0 4px 0 #56779a}
+.move-btn[data-move="switch"]{background:#b8a2f0;box-shadow:0 4px 0 #7c62c0}
 .battle-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
 .battle-or{color:var(--muted);font-weight:600}
 .battle-box{background:rgba(35,41,50,.9);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 18px;max-width:640px}
@@ -660,7 +696,7 @@ async function loadData() {
     sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle(),
     sb.from('friend_requests').select('id', { count: 'exact', head: true }).eq('recipient_id', uid),
     sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle(),
-    sb.from('battles').select('id', { count: 'exact', head: true }).eq('opponent_id', uid).eq('status', 'pending'),
+    sb.from('tbattles').select('player_a, player_b, status, moved:state->moved').eq('mode', 'pvp').in('status', ['pending', 'active']).or(`player_a.eq.${uid},player_b.eq.${uid}`),
     sb.from('welcome_packs').select('user_id').eq('user_id', uid).maybeSingle()
   ]);
   for (const r of [cards, mine, prof, wallet]) if (r.error) throw new Error(r.error.message);
@@ -668,7 +704,9 @@ async function loadData() {
   state.incomingRequests = requests.error ? 0 : (requests.count || 0);
   // Admin ziet alle kaarten ontgrendeld (enkel weergave; echte bezittingen blijven ongewijzigd)
   state.isAdmin = !admin.error && !!admin.data;
-  state.incomingBattles = battlesIn.error ? 0 : (battlesIn.count || 0);
+  // Bolletje Battle: uitdagingen aan jou + gevechten tegen vrienden waarin jij aan zet bent
+  state.incomingBattles = battlesIn.error ? 0 : (battlesIn.data || []).filter(b =>
+    b.status === 'pending' ? b.player_b === uid : !(b.moved || {})[b.player_a === uid ? 'A' : 'B']).length;
   // Welkomstpakket nog niet opgehaald? (zonder schema-v7 bestaat de tabel niet: dan geen knop)
   state.welcomeAvailable = !welcome.error && !welcome.data;
   state.cards = cards.data;
@@ -970,12 +1008,14 @@ const INFO = {
     <li>Achteraan vind je de pagina <strong>Dubbels</strong> met alle kaarten die je meer dan één keer hebt.</li></ul>`],
   stats: ['Statistieken', `<p>Een overzicht van al je Wordles (2 per dag): hoe vaak je speelde, je huidige streak (opeenvolgende dagen), hoe vaak je de Wordle oploste en in hoeveel pogingen.</p>`],
   battle: ['Zo werkt Battle', `
-    <p>Kies 3 kaarten, in de volgorde waarin ze vechten.</p>
-    <ul><li>De actieve kaarten slaan om beurten: hoe hoger je ATK en hoe lager de DEF van de tegenstander, hoe meer schade. Soms is het een voltreffer.</li>
-    <li>Valt een kaart op 0 HP, dan komt de volgende. Wie eerst 3 kaarten verliest, verliest.</li>
-    <li>Legendaries gebruiken hun special één keer, zodra ze onder de helft van hun HP zakken.</li>
-    <li><strong>Oefengevecht</strong>: tegen de computer, zonder beloning.</li>
-    <li><strong>Vriend uitdagen</strong>: je vriend kiest een eigen team en accepteert. Het team van je tegenstander blijft geheim tot het gevecht. De winnaar krijgt 10 polycoins (maximaal 3 keer per dag).</li></ul>`],
+    <p>Kies 3 kaarten, in de volgorde waarin ze vechten. Elke ronde kies jij een zet — tegen een vriend kiezen jullie allebei tegelijk en geheim.</p>
+    <ul><li>⚔️ <strong>Aanval</strong>: normale schade, +1 ⚡ energie.</li>
+    <li>💥 <strong>Krachtaanval</strong>: 1,7× schade, kost 2 ⚡.</li>
+    <li>🛡️ <strong>Verdedigen</strong>: je krijgt deze ronde maar de helft van de schade, +2 ⚡.</li>
+    <li>★ <strong>Special</strong> (legendaries): vaste zware schade die door verdediging gaat, kost 4 ⚡.</li>
+    <li>🔄 <strong>Wisselen</strong>: ruil je kaart met een kaart van je bank. Gebeurt vóór de aanvallen, +1 ⚡.</li></ul>
+    <p>De kaart met de hoogste ATK valt eerst aan. Valt een kaart uit, dan komt de volgende uit je team erin. Wie eerst 3 kaarten verliest, verliest.</p>
+    <p><strong>Polycoins</strong>: computer makkelijk/normaal/moeilijk = 5/10/20 (max 5 per dag). Tegen een vriend: winnaar 25, verliezer 5 (max 3 per dag). Opgeven levert niets op.</p>`],
   friends: ['Vrienden', `
     <p>Deel je code met collega's, of voer hun code in om een vriendschapsverzoek te sturen.</p>
     <ul><li>Zodra ze accepteren, kan je elkaars statistieken bekijken, kaarten ruilen en elkaar uitdagen in Battle.</li>
@@ -2048,84 +2088,31 @@ function openCounterBuilder(t, others) {
   $('#tradeBuilder').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ---------- Tab: Battle ----------
-// Stap 1: oefengevecht tegen de computer. De gevechtsregels zitten in simulateBattle,
-// zodat later ook gevechten tegen vrienden dezelfde regels kunnen gebruiken.
+// ---------- Tab: Battle (tactisch, ronde per ronde) ----------
+// Alle regels en de computer-tegenstander zitten in Supabase (schema-v9-tactical-battles.sql):
+// de website stuurt enkel de gekozen zet door en speelt het resultaat af.
 const TEAM_SIZE = 3;
 const RARITY_ORDER = { legendary: 0, epic: 1, common: 2, cat: 3 };
-const battleState = { team: [] }; // gekozen card_ids, in volgorde
-
-function simulateBattle(teamA, teamB, rand = Math.random) {
-  const mk = cards => cards.map(c => {
-    const maxHp = Number(c.hp) || 50;
-    return { card: c, hp: maxHp, maxHp, usedSpecial: false };
-  });
-  const sides = { A: { fighters: mk(teamA), active: 0 }, B: { fighters: mk(teamB), active: 0 } };
-  const events = [];
-  const snap = () => ({
-    A: { active: sides.A.active, hps: sides.A.fighters.map(f => f.hp) },
-    B: { active: sides.B.active, hps: sides.B.fighters.map(f => f.hp) }
-  });
-  let turn = rand() < 0.5 ? 'A' : 'B';
-  events.push({ type: 'start', first: turn, state: snap() });
-  for (let i = 0; i < 300; i++) {
-    const other = turn === 'A' ? 'B' : 'A';
-    const att = sides[turn].fighters[sides[turn].active];
-    const def = sides[other].fighters[sides[other].active];
-    const atk = Number(att.card.attack) || 10, dfn = Number(def.card.defense) || 0;
-    let dmg, kind = 'hit';
-    if (att.card.special_power && !att.usedSpecial && att.hp <= att.maxHp / 2) {
-      att.usedSpecial = true; kind = 'special';
-      dmg = Number(att.card.special_power);
-    } else {
-      dmg = Math.max(Math.round(atk * 0.25), Math.round(atk * (0.85 + rand() * 0.3) - dfn * 0.5));
-      if (rand() < 0.1) { dmg = Math.round(dmg * 1.5); kind = 'crit'; }
-    }
-    def.hp = Math.max(0, def.hp - dmg);
-    events.push({ type: 'attack', side: turn, kind, dmg, attacker: att.card, defender: def.card, state: snap() });
-    if (def.hp === 0) {
-      events.push({ type: 'ko', side: other, card: def.card, state: snap() });
-      if (sides[other].active === sides[other].fighters.length - 1) {
-        events.push({ type: 'end', winner: turn, state: snap() });
-        return events;
-      }
-      sides[other].active++;
-      events.push({ type: 'enter', side: other, card: sides[other].fighters[sides[other].active].card, state: snap() });
-    }
-    turn = other;
-  }
-  // Veiligheidsnet: na te veel beurten wint wie procentueel het meeste HP over heeft
-  const left = s => s.fighters.reduce((n, f) => n + f.hp / f.maxHp, 0);
-  events.push({ type: 'end', winner: left(sides.A) >= left(sides.B) ? 'A' : 'B', state: snap() });
-  return events;
-}
-
-const randomOpponent = team => team.map(c => {
-  const pool = state.cards.filter(x => x.rarity === c.rarity);
-  return pool[Math.floor(Math.random() * pool.length)];
-});
-
-// Zet het opgeslagen verloop van een server-gevecht om naar hetzelfde formaat als simulateBattle
-function fromServerEvents(events, teams) {
-  const other = s => s === 'A' ? 'B' : 'A';
-  return events.map(e => {
-    if (e.t === 'start') return { type: 'start', first: e.first, state: e.st };
-    if (e.t === 'atk') return { type: 'attack', side: e.s, kind: e.k, dmg: e.d, attacker: teams[e.s][e.ai], defender: teams[other(e.s)][e.di], state: e.st };
-    if (e.t === 'ko') return { type: 'ko', side: e.s, card: teams[e.s][e.i], state: e.st };
-    if (e.t === 'enter') return { type: 'enter', side: e.s, card: teams[e.s][e.i], state: e.st };
-    return { type: 'end', winner: e.w, state: e.st };
-  });
-}
-
-// Wissel kant A en B om, zodat "jij" altijd links staat
-function flipEvents(events) {
-  const f = s => s === 'A' ? 'B' : s === 'B' ? 'A' : s;
-  return events.map(e => ({ ...e, side: f(e.side), first: f(e.first), winner: f(e.winner), state: { A: e.state.B, B: e.state.A } }));
-}
-
-const battleErr = (view, e) => { view.innerHTML = `<section class="col"><p class="msg err">${esc(e.message)}</p></section>`; };
+const battleState = { team: [], poll: null }; // gekozen card_ids (in volgorde) + polling-timer
+const DIFFS = {
+  easy: { label: 'Makkelijk', coins: 5, hint: 'zwakkere kaarten' },
+  normal: { label: 'Normaal', coins: 10, hint: 'zelfde zeldzaamheid' },
+  hard: { label: 'Moeilijk', coins: 20, hint: 'sterkere kaarten, slimme tegenstander' },
+};
+const MOVES = {
+  attack: { icon: '⚔️', label: 'Aanval', cost: 0, info: '+1 ⚡' },
+  power: { icon: '💥', label: 'Krachtaanval', cost: 2, info: '1,7× schade · 2 ⚡' },
+  guard: { icon: '🛡️', label: 'Verdedigen', cost: 0, info: 'halve schade · +2 ⚡' },
+  special: { icon: '★', label: 'Special', cost: 4, info: 'door verdediging · 4 ⚡' },
+  switch: { icon: '🔄', label: 'Wisselen', cost: 0, info: 'gaat eerst · +1 ⚡' },
+};
+const cardById = id => state.cards.find(c => c.id === Number(id));
+const mySide = b => (b.player_a === state.session.user.id ? 'A' : 'B');
+const otherSide = s => (s === 'A' ? 'B' : 'A');
+const stopBattlePoll = () => { clearInterval(battleState.poll); battleState.poll = null; };
 
 async function renderBattle(view) {
+  stopBattlePoll();
   view.innerHTML = `<section class="col" style="max-width:none"><p class="hint">Laden…</p></section>`;
   const uid = state.session.user.id;
   const owned = state.cards
@@ -2133,102 +2120,111 @@ async function renderBattle(view) {
     .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || (b.attack - a.attack));
   battleState.team = battleState.team.filter(id => state.owned.has(id));
 
-  const [friendRows, battleRows, board] = await Promise.all([
+  const [friendRows, rows, board, rewards] = await Promise.all([
     sb.from('friendships').select('friend_id').eq('user_id', uid),
-    sb.from('battles').select('id, challenger_id, opponent_id, status, winner_id, coins_awarded, created_at, resolved_at')
-      .or(`challenger_id.eq.${uid},opponent_id.eq.${uid}`).order('created_at', { ascending: false }).limit(40),
-    sb.rpc('battle_leaderboard'),
+    sb.from('tbattles').select('id, mode, difficulty, player_a, player_b, status, winner, round, coins_a, coins_b, forfeit, updated_at, moved:state->moved')
+      .or(`player_a.eq.${uid},player_b.eq.${uid}`).order('updated_at', { ascending: false }).limit(40),
+    sb.rpc('tb_leaderboard'),
+    sb.rpc('tb_rewards_today'),
   ]);
-  if (friendRows.error) return battleErr(view, friendRows.error);
-  // Zonder schema-v6 bestaat de tabel nog niet: dan enkel de oefenmodus tonen
-  const online = !battleRows.error;
-  const battles = battleRows.data || [];
+  if (state.tab !== 'battle') return;
+  if (rows.error) {
+    view.innerHTML = `<section class="col">${pageHead('Battle', 'battle')}<p class="msg err">Battle kon niet geladen worden: ${esc(rows.error.message)}</p></section>`;
+    return;
+  }
+  const battles = rows.data || [];
   const friendIds = (friendRows.data || []).map(r => r.friend_id);
-  const ids = [...new Set([...friendIds, ...battles.flatMap(b => [b.challenger_id, b.opponent_id])])].filter(id => id !== uid);
+  const ids = [...new Set([...friendIds, ...battles.flatMap(b => [b.player_a, b.player_b])])].filter(id => id && id !== uid);
   const names = {};
   if (ids.length) {
     const { data: profs } = await sb.from('profiles').select('id, display_name').in('id', ids);
     for (const p of profs || []) names[p.id] = p.display_name;
   }
   const nameOf = id => names[id] || '…';
-  const incoming = battles.filter(b => b.status === 'pending' && b.opponent_id === uid);
-  const outgoing = battles.filter(b => b.status === 'pending' && b.challenger_id === uid);
-  const done = battles.filter(b => b.status === 'done').slice(0, 10);
-  state.incomingBattles = incoming.length;
-  syncBattleBadge();
+  const opponentOf = b => (b.mode === 'pve' ? `Computer (${DIFFS[b.difficulty]?.label || ''})` : nameOf(mySide(b) === 'A' ? b.player_b : b.player_a));
 
-  if (owned.length < TEAM_SIZE) {
-    view.innerHTML = `<section class="col soon">
-      ${pageHead('Battle', 'battle')}
-      <p class="hint">Je hebt minstens ${TEAM_SIZE} verschillende kaarten nodig om te vechten. Je hebt er nu ${owned.length}. Speel nog wat Wordles!</p>
-    </section>`;
-    return;
-  }
+  const incoming = battles.filter(b => b.status === 'pending' && b.player_b === uid);
+  const sent = battles.filter(b => b.status === 'pending' && b.player_a === uid);
+  const active = battles.filter(b => b.status === 'active');
+  const myTurn = active.filter(b => !(b.moved || {})[mySide(b)]);
+  const waiting = active.filter(b => (b.moved || {})[mySide(b)]);
+  const done = battles.filter(b => b.status === 'done').slice(0, 8);
+  state.incomingBattles = incoming.length + myTurn.filter(b => b.mode === 'pvp').length;
+  syncBattleBadge();
+  const rw = rewards.data || { pve: 0, pve_max: 5, pvp: 0, pvp_max: 3 };
 
   view.innerHTML = `<section class="col" style="max-width:none">
-    ${pageHead('Battle', 'battle')}
-    ${incoming.length ? `<div class="battle-box highlight">
-      <h3>Uitdagingen voor jou (${incoming.length})</h3>
-      <p class="hint" style="margin-bottom:6px">Kies hieronder je team en accepteer.</p>
+    <div class="battle-top">
+      ${pageHead('Battle', 'battle')}
+      <span class="pill">🪙 Vandaag beloond: computer ${rw.pve}/${rw.pve_max} · vrienden ${rw.pvp}/${rw.pvp_max}</span>
+    </div>
+
+    ${myTurn.length || incoming.length ? `<div class="battle-box highlight">
+      ${myTurn.map(b => `<div class="battle-row">
+        <span class="battle-row-text">⚡ <strong>Jouw zet</strong> tegen ${esc(opponentOf(b))} · ronde ${b.round + 1}</span>
+        <button class="btn small" data-open-battle="${b.id}" type="button">Speel verder</button>
+      </div>`).join('')}
       ${incoming.map(b => `<div class="battle-row">
-        <span class="battle-row-text"><strong>${esc(nameOf(b.challenger_id))}</strong> daagt je uit</span>
+        <span class="battle-row-text"><strong>${esc(nameOf(b.player_a))}</strong> daagt je uit — kies je team en accepteer</span>
         <button class="btn small" data-accept-battle="${b.id}" type="button">Accepteren met mijn team</button>
         <button class="link danger" data-decline-battle="${b.id}" type="button">Weigeren</button>
       </div>`).join('')}
       <p class="msg tmsg" id="incomingMsg" role="alert"></p>
     </div>` : ''}
 
-    <div class="battle-bar" style="margin-top:14px">
-      <h3 style="margin:0">Jouw team</h3>
-      <span id="teamCount" class="pill"></span>
-      <button class="link" id="clearTeam" type="button">Team wissen</button>
-    </div>
-    <div class="battle-pick">${owned.map(c => `
-      <button class="pick" type="button" data-pick="${c.id}" aria-pressed="false">
-        <span class="pick-num" hidden></span>
-        ${renderCard(c)}
-      </button>`).join('')}</div>
+    ${owned.length < TEAM_SIZE
+      ? `<p class="hint" style="margin-top:14px">Je hebt minstens ${TEAM_SIZE} verschillende kaarten nodig om te vechten. Je hebt er nu ${owned.length}.</p>`
+      : `<div class="battle-bar" style="margin-top:14px">
+          <h3 style="margin:0">Jouw team</h3>
+          <span id="teamCount" class="pill"></span>
+          <button class="link" id="clearTeam" type="button">Team wissen</button>
+        </div>
+        <div class="battle-pick">${owned.map(c => `
+          <button class="pick" type="button" data-pick="${c.id}" aria-pressed="false">
+            <span class="pick-num" hidden></span>${renderCard(c)}
+          </button>`).join('')}</div>
+        <div class="battle-actions">
+          <span class="battle-or">Tegen de computer:</span>
+          ${Object.entries(DIFFS).map(([k, d]) => `<button class="btn small diff-btn" data-pve="${k}" type="button" title="${d.hint}">${d.label} <small>+${d.coins}🪙</small></button>`).join('')}
+          ${friendIds.length ? `<span class="battle-or">of</span>
+            <select id="battleFriend" class="tselect" style="width:auto;min-width:170px">
+              <option value="">Kies een vriend…</option>
+              ${friendIds.map(id => `<option value="${id}">${esc(nameOf(id))}</option>`).join('')}
+            </select>
+            <button class="btn small" id="challengeBattle" type="button">Uitdagen <small>+25🪙</small></button>` : ''}
+        </div>
+        <p class="msg tmsg" id="battleMsg" role="alert"></p>`}
 
-    <div class="battle-actions">
-      <button class="btn small" id="startBattle" type="button">Oefengevecht tegen de computer</button>
-      ${online ? (friendIds.length ? `<span class="battle-or">of</span>
-        <select id="battleFriend" class="tselect" style="width:auto;min-width:180px">
-          <option value="">Kies een vriend…</option>
-          ${friendIds.map(id => `<option value="${id}">${esc(nameOf(id))}</option>`).join('')}
-        </select>
-        <button class="btn small" id="challengeBattle" type="button">Vriend uitdagen</button>`
-        : '<span class="hint" style="margin:0">Voeg vrienden toe om ze uit te dagen.</span>') : ''}
-    </div>
-    <p class="msg tmsg" id="battleMsg" role="alert"></p>
-
-    <div class="three-col">
-    ${outgoing.length ? `<div><h3>Openstaande uitdagingen</h3>
-      ${outgoing.map(b => `<div class="battle-row">
-        <span class="battle-row-text">Wachten op <strong>${esc(nameOf(b.opponent_id))}</strong></span>
-        <button class="link danger" data-cancel-battle="${b.id}" type="button">Annuleren</button>
-      </div>`).join('')}</div>` : ''}
-
-    ${online ? `<div><h3>Recente gevechten</h3>
-      ${done.length ? done.map(b => {
-        const won = b.winner_id === uid;
-        const other = b.challenger_id === uid ? b.opponent_id : b.challenger_id;
-        return `<div class="battle-row">
-          <span class="result-tag ${won ? 'won' : 'lost'}">${won ? 'Gewonnen' : 'Verloren'}</span>
-          <span class="battle-row-text">tegen <strong>${esc(nameOf(other))}</strong>${won && b.coins_awarded ? ` · +${b.coins_awarded} 🪙` : ''}</span>
-          <button class="link" data-replay="${b.id}" type="button">Bekijk gevecht</button>
-        </div>`;
-      }).join('') : '<p class="hint">Nog geen gevechten tegen vrienden.</p>'}</div>
-
-      <div><h3>Ranglijst</h3>
-      ${board.error ? `<p class="msg err">${esc(board.error.message)}</p>` : `<table class="leaderboard">
-        <thead><tr><th>#</th><th>Naam</th><th>Gewonnen</th><th>Verloren</th></tr></thead>
-        <tbody>${(board.data || []).map((r, i) => `<tr${r.user_id === uid ? ' class="me"' : ''}>
-          <td>${i + 1}</td><td>${esc(r.display_name)}</td><td>${r.wins}</td><td>${r.losses}</td></tr>`).join('')}</tbody>
-      </table>`}</div>` : ''}
+    <div class="three-col" style="margin-top:14px">
+      <div><h3>Wachten op zet</h3>
+        ${waiting.length || sent.length ? [...waiting.map(b => `<div class="battle-row">
+            <span class="battle-row-text">⏳ ${esc(opponentOf(b))} · ronde ${b.round + 1}</span>
+            <button class="link" data-open-battle="${b.id}" type="button">Bekijk</button></div>`),
+          ...sent.map(b => `<div class="battle-row">
+            <span class="battle-row-text">✉️ Uitdaging aan <strong>${esc(nameOf(b.player_b))}</strong></span>
+            <button class="link danger" data-cancel-battle="${b.id}" type="button">Annuleren</button></div>`)].join('')
+          : '<p class="hint">Niets om op te wachten.</p>'}
+      </div>
+      <div><h3>Recente gevechten</h3>
+        ${done.length ? done.map(b => {
+          const won = b.winner === mySide(b);
+          const coins = mySide(b) === 'A' ? b.coins_a : b.coins_b;
+          return `<div class="battle-row">
+            <span class="result-tag ${won ? 'won' : 'lost'}">${won ? 'Gewonnen' : 'Verloren'}</span>
+            <span class="battle-row-text">${esc(opponentOf(b))}${coins ? ` · +${coins} 🪙` : ''}</span>
+            <button class="link" data-open-battle="${b.id}" type="button">Bekijk</button></div>`;
+        }).join('') : '<p class="hint">Nog geen gevechten.</p>'}
+      </div>
+      <div><h3>Ranglijst (vrienden)</h3>
+        ${board.error ? `<p class="msg err">${esc(board.error.message)}</p>` : `<table class="leaderboard">
+          <thead><tr><th>#</th><th>Naam</th><th>W</th><th>V</th></tr></thead>
+          <tbody>${(board.data || []).map((r, i) => `<tr${r.user_id === uid ? ' class="me"' : ''}>
+            <td>${i + 1}</td><td>${esc(r.display_name)}</td><td>${r.wins}</td><td>${r.losses}</td></tr>`).join('')}</tbody>
+        </table>`}
+      </div>
     </div>
   </section>`;
 
-  const teamCards = () => battleState.team.map(id => state.cards.find(c => c.id === id));
   const teamReady = () => battleState.team.length === TEAM_SIZE;
   const sync = () => {
     view.querySelectorAll('[data-pick]').forEach(b => {
@@ -2238,8 +2234,8 @@ async function renderBattle(view) {
       const num = b.querySelector('.pick-num');
       num.hidden = idx < 0; num.textContent = idx + 1;
     });
-    $('#teamCount').textContent = `Team: ${battleState.team.length}/${TEAM_SIZE}`;
-    view.querySelectorAll('#startBattle, #challengeBattle, [data-accept-battle]').forEach(b => { b.disabled = !teamReady(); });
+    if ($('#teamCount')) $('#teamCount').textContent = `Team: ${battleState.team.length}/${TEAM_SIZE}`;
+    view.querySelectorAll('[data-pve], #challengeBattle, [data-accept-battle]').forEach(b => { b.disabled = !teamReady(); });
   };
   view.querySelectorAll('[data-pick]').forEach(b => {
     b.onclick = () => {
@@ -2250,167 +2246,259 @@ async function renderBattle(view) {
       sync();
     };
   });
-  $('#clearTeam').onclick = () => { battleState.team = []; sync(); };
+  if ($('#clearTeam')) $('#clearTeam').onclick = () => { battleState.team = []; sync(); };
 
-  const practice = mine => {
-    const opp = randomOpponent(mine);
-    playBattle(view, {
-      title: 'Oefengevecht', events: simulateBattle(mine, opp), teams: { A: mine, B: opp }, opponentName: 'Computer',
-      again: { label: 'Opnieuw met dit team', run: () => practice(mine) }
-    });
-  };
-  $('#startBattle').onclick = () => practice(teamCards());
-
-  const msg = (id, text, ok) => { const m = $(id); if (m) { m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; } };
+  const msg = (sel, text, ok) => { const m = $(sel); if (m) { m.className = 'msg tmsg ' + (ok ? 'ok' : 'err'); m.textContent = text; } };
+  view.querySelectorAll('[data-pve]').forEach(b => b.onclick = async () => {
+    b.disabled = true;
+    const { data, error } = await sb.rpc('tb_start_pve', { p_cards: battleState.team, p_difficulty: b.dataset.pve });
+    if (error) { msg('#battleMsg', error.message); b.disabled = false; return; }
+    openBattle(view, data);
+  });
   if ($('#challengeBattle')) $('#challengeBattle').onclick = async () => {
     const fid = $('#battleFriend').value;
     if (!fid) return msg('#battleMsg', 'Kies eerst een vriend.');
-    const { error } = await sb.rpc('create_battle', { p_friend_id: fid, p_cards: battleState.team });
+    const { error } = await sb.rpc('tb_challenge', { p_friend: fid, p_cards: battleState.team });
     if (error) return msg('#battleMsg', error.message);
-    msg('#battleMsg', `Uitdaging verstuurd naar ${nameOf(fid)}! Je ziet het resultaat zodra die accepteert.`, true);
-    setTimeout(() => { if ($('#battleMsg')) renderBattle(view); }, 1200); // niet als er intussen een gevecht speelt
+    msg('#battleMsg', `Uitdaging verstuurd naar ${nameOf(fid)}!`, true);
+    setTimeout(() => { if ($('#battleMsg')) renderBattle(view); }, 1200);
   };
+  view.querySelectorAll('[data-open-battle]').forEach(b => { b.onclick = () => openBattle(view, Number(b.dataset.openBattle)); });
   view.querySelectorAll('[data-cancel-battle]').forEach(b => b.onclick = async () => {
     b.disabled = true;
-    const { error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.cancelBattle), p_action: 'cancel' });
+    const { error } = await sb.rpc('tb_respond', { p_id: Number(b.dataset.cancelBattle), p_action: 'cancel' });
     if (error) { alert(error.message); b.disabled = false; return; }
     renderBattle(view);
   });
   view.querySelectorAll('[data-decline-battle]').forEach(b => b.onclick = async () => {
     if (!confirm('Deze uitdaging weigeren?')) return;
     b.disabled = true;
-    const { error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.declineBattle), p_action: 'decline' });
+    const { error } = await sb.rpc('tb_respond', { p_id: Number(b.dataset.declineBattle), p_action: 'decline' });
     if (error) { alert(error.message); b.disabled = false; return; }
     renderBattle(view);
   });
   view.querySelectorAll('[data-accept-battle]').forEach(b => b.onclick = async () => {
     b.disabled = true;
-    const { data, error } = await sb.rpc('respond_battle', { p_battle_id: Number(b.dataset.acceptBattle), p_action: 'accept', p_cards: battleState.team });
+    const id = Number(b.dataset.acceptBattle);
+    const { error } = await sb.rpc('tb_respond', { p_id: id, p_action: 'accept', p_cards: battleState.team });
     if (error) { msg('#incomingMsg', error.message); b.disabled = false; return; }
-    if (data.status === 'cancelled') { msg('#incomingMsg', 'De uitdager heeft niet meer alle kaarten van zijn team, dus de uitdaging is geannuleerd.'); setTimeout(() => { if ($('#battleMsg')) renderBattle(view); }, 1800); return; }
-    replayBattle(view, data);
-  });
-  view.querySelectorAll('[data-replay]').forEach(b => b.onclick = async () => {
-    const { data, error } = await sb.from('battles').select('*').eq('id', Number(b.dataset.replay)).single();
-    if (error) { alert(error.message); return; }
-    replayBattle(view, data);
+    openBattle(view, id);
   });
   sync();
 }
 
-// Een gevecht tegen een vriend afspelen vanuit het opgeslagen verloop
-async function replayBattle(view, b) {
-  const uid = state.session.user.id;
-  const card = id => state.cards.find(c => c.id === id);
-  const teams = { A: b.challenger_cards.map(card), B: b.opponent_cards.map(card) };
-  const iAmA = b.challenger_id === uid;
-  const otherId = iAmA ? b.opponent_id : b.challenger_id;
-  const { data: prof } = await sb.from('profiles').select('display_name').eq('id', otherId).maybeSingle();
-  const events = fromServerEvents(b.events, teams);
-  const won = b.winner_id === uid;
-  if (won && b.coins_awarded) {
-    // Saldo opnieuw ophalen: de beloning is server-side bijgeschreven
-    const { data: w } = await sb.from('user_wallet').select('polycoins').eq('user_id', uid).maybeSingle();
-    if (w) { state.wallet = w.polycoins; syncCoinUI(); }
+// ---------- Speelscherm ----------
+function eventText(e, b, names) {
+  const me = mySide(b);
+  const who = s => `<span class="who">${esc(s === me ? 'Jij' : names.opp)}</span>`;
+  const st = b.state;
+  const card = (s, i) => cardById(st[s].cards[i]);
+  if (e.t === 'atk') {
+    const c = card(e.s, e.ai ?? st[e.s].active);
+    const name = esc(c?.name || '?');
+    const how = e.k === 'special' ? `★ <strong>${esc(c?.special_name || 'Special')}</strong>` : e.k === 'power' ? '💥 krachtaanval' : 'valt aan';
+    return `${who(e.s)} ${name} ${how}: ${e.d} schade${e.crit ? ' — voltreffer!' : ''}${e.guarded ? ' (verdedigd)' : ''}`;
   }
-  playBattle(view, {
-    title: `Gevecht tegen ${prof?.display_name || 'je vriend'}`,
-    events: iAmA ? events : flipEvents(events),
-    teams: iAmA ? teams : { A: teams.B, B: teams.A },
-    opponentName: prof?.display_name || 'Tegenstander',
-    extra: won && b.coins_awarded ? `Je verdiende ${b.coins_awarded} polycoins.` : ''
-  });
+  if (e.t === 'guard') return `${who(e.s)} 🛡️ verdedigt`;
+  if (e.t === 'switch') return `${who(e.s)} 🔄 wisselt naar ${esc(card(e.s, e.i)?.name || '?')}`;
+  if (e.t === 'ko') return `${who(e.s)} <strong>${esc(card(e.s, e.i)?.name || '?')}</strong> is uitgeschakeld!`;
+  if (e.t === 'enter') return `${who(e.s)} ${esc(card(e.s, e.i)?.name || '?')} komt de arena in`;
+  if (e.t === 'forfeit') return `${who(e.s)} geeft op`;
+  if (e.t === 'end') return `<strong>${e.w === me ? 'Jij wint!' : `${esc(names.opp)} wint.`}</strong>`;
+  return '';
 }
 
-async function playBattle(view, { title, events, teams, opponentName, again, extra = '' }) {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let skip = false;
+// Toont een kant (links = jij) op basis van een weergave-toestand {active, hp[], energy}
+function sideHtml(b, s, disp, mine) {
+  const side = b.state[s];
+  const c = cardById(side.cards[disp.active]);
+  const hp = disp.hp[disp.active], max = side.max[disp.active];
+  const pct = Math.max(0, hp / max * 100);
+  return `<div class="bt-name">${mine ? 'Jij' : esc(disp.name)}</div>
+    <div class="fighter-card" data-active="${disp.active}">${c ? renderCard(c) : ''}</div>
+    <div class="hpbar"><div class="hpfill${pct <= 25 ? ' low' : pct <= 50 ? ' mid' : ''}" style="width:${pct}%"></div></div>
+    <div class="hptext">HP ${hp} / ${max}</div>
+    <div class="energy" title="Energie">${Array.from({ length: 5 }, (_, i) => `<span class="pip${i < disp.energy ? ' on' : ''}">⚡</span>`).join('')}</div>
+    <div class="bench">${side.cards.map((id, i) => {
+      if (i === disp.active) return '';
+      const bc = cardById(id), bh = disp.hp[i];
+      return `<button type="button" class="bench-card${bh <= 0 ? ' out' : ''}" data-bench="${i}" ${mine && bh > 0 ? '' : 'disabled'}>
+        <span>${esc(bc?.name || '?')}</span><span class="bench-hp">${bh > 0 ? `${bh} HP` : 'uitgeschakeld'}</span></button>`;
+    }).join('')}</div>`;
+}
+
+async function openBattle(view, id, prev = null) {
+  stopBattlePoll();
+  const { data: b, error } = await sb.from('tbattles').select('*').eq('id', id).single();
+  if (error) { alert(error.message); return renderBattle(view); }
+  if (b.status === 'pending') { alert('Deze uitdaging is nog niet geaccepteerd.'); return renderBattle(view); }
+  const me = mySide(b), op = otherSide(me);
+  let oppName = 'Computer';
+  if (b.mode === 'pvp') {
+    const { data: p } = await sb.from('profiles').select('display_name').eq('id', me === 'A' ? b.player_b : b.player_a).maybeSingle();
+    oppName = p?.display_name || 'Tegenstander';
+  }
+  const names = { opp: oppName };
+  const title = b.mode === 'pve' ? `Tegen de computer · ${DIFFS[b.difficulty]?.label || ''}` : `Tegen ${esc(oppName)}`;
+
+  // Weergave-toestand: bij een nieuwe ronde starten we van de vorige en spelen we de gebeurtenissen af
+  const fromState = (prev && prev.round < b.round) ? prev.state : b.state;
+  const disp = {
+    A: { active: fromState.A.active, hp: [...fromState.A.hp], energy: fromState.A.energy, name: me === 'A' ? 'Jij' : oppName },
+    B: { active: fromState.B.active, hp: [...fromState.B.hp], energy: fromState.B.energy, name: me === 'B' ? 'Jij' : oppName },
+  };
+  const events = b.state.events || [];
+  const newEvents = (prev && prev.round < b.round) ? events.filter(e => e.r > prev.round) : [];
 
   view.innerHTML = `<section class="col" style="max-width:none">
-    <h2>${esc(title)}</h2>
-    <div class="battle-layout"><div>
-    <div class="arena">
-      <div class="fighter" id="fA"><div class="fighter-name">Jij</div><div class="fighter-card"></div><div class="hpbar"><div class="hpfill"></div></div><div class="hptext"></div><div class="bench"></div></div>
-      <div class="vs" aria-hidden="true">VS</div>
-      <div class="fighter" id="fB"><div class="fighter-name">${esc(opponentName)}</div><div class="fighter-card"></div><div class="hpbar"><div class="hpfill"></div></div><div class="hptext"></div><div class="bench"></div></div>
+    <div class="bt-head">
+      <button class="link" id="btBack" type="button">← Battle</button>
+      <h2>${title}</h2>
+      <span class="pill" id="btRound">Ronde ${b.round + (b.status === 'active' ? 1 : 0)}</span>
+      ${b.status === 'active' ? '<button class="link danger forfeit" id="btForfeit" type="button">Opgeven</button>' : ''}
     </div>
-    <div class="battle-bar" style="margin-top:12px">
-      <button class="link" id="skipBattle" type="button">Overslaan</button>
-    </div>
-    </div><div>
-    <div id="battleResult"></div>
-    <ol class="battle-log" id="battleLog" aria-live="polite"></ol>
-    </div></div>
-  </section>`;
-  $('#skipBattle').onclick = () => { skip = true; };
-
-  const shown = { A: -1, B: -1 };
-  const draw = st => {
-    for (const side of ['A', 'B']) {
-      const el = $(`#f${side}`), s = st[side];
-      const f = teams[side][s.active];
-      if (shown[side] !== s.active) {
-        el.querySelector('.fighter-card').innerHTML = renderCard(f);
-        shown[side] = s.active;
-        el.classList.remove('ko');
-      }
-      const hp = s.hps[s.active], max = Number(f.hp) || 50;
-      const pct = Math.max(0, hp / max * 100);
-      const fill = el.querySelector('.hpfill');
-      fill.style.width = pct + '%';
-      fill.className = 'hpfill' + (pct <= 25 ? ' low' : pct <= 50 ? ' mid' : '');
-      el.querySelector('.hptext').textContent = `HP ${hp} / ${max}`;
-      el.querySelector('.bench').innerHTML = s.hps.map((h, i) =>
-        `<span class="bench-dot${h === 0 ? ' out' : ''}${i === s.active ? ' now' : ''}" title="${esc(teams[side][i].name)}"></span>`).join('');
-    }
-  };
-  const log = (html, cls = '') => {
-    const li = document.createElement('li');
-    li.innerHTML = html; if (cls) li.className = cls;
-    $('#battleLog').prepend(li);
-  };
-  const who = side => `<span class="who">${esc(side === 'A' ? 'Jij' : opponentName)}</span>`;
-
-  for (const ev of events) {
-    if (!$('#battleLog')) return; // tab gewisseld
-    draw(ev.state);
-    if (ev.type === 'start') log(`${ev.first === 'A' ? 'Jij begint' : `${esc(opponentName)} begint`}.`);
-    if (ev.type === 'attack') {
-      const text = ev.kind === 'special'
-        ? `★ <strong>${esc(ev.attacker.special_name)}</strong>! ${esc(ev.attacker.name)} doet ${ev.dmg} schade.`
-        : `${esc(ev.attacker.name)} raakt ${esc(ev.defender.name)}: ${ev.dmg} schade${ev.kind === 'crit' ? ' — voltreffer!' : ''}.`;
-      log(`${who(ev.side)} ${text}`, ev.side === 'A' ? 'mine' : 'theirs');
-      if (!skip && !reduce) {
-        const target = $(`#f${ev.side === 'A' ? 'B' : 'A'}`);
-        const pop = document.createElement('span');
-        pop.className = 'dmg-pop' + (ev.kind !== 'hit' ? ' big' : '');
-        pop.textContent = `-${ev.dmg}`;
-        target.querySelector('.fighter-card').appendChild(pop);
-        target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit');
-        setTimeout(() => pop.remove(), 800);
-      }
-    }
-    if (ev.type === 'ko') {
-      $(`#f${ev.side}`).classList.add('ko');
-      log(`${who(ev.side)} <strong>${esc(ev.card.name)}</strong> is uitgeschakeld!`, 'ko-line');
-    }
-    if (ev.type === 'enter') log(`${who(ev.side)} ${esc(ev.card.name)} komt de arena in.`);
-    if (ev.type === 'end') {
-      const won = ev.winner === 'A';
-      $('#skipBattle').hidden = true;
-      $('#battleResult').innerHTML = `<div class="battle-result ${won ? 'won' : 'lost'}">
-        <h3>${won ? 'Gewonnen!' : 'Verloren…'}</h3>
-        <p>${won ? `Je team heeft ${esc(opponentName)} verslagen.` : `${esc(opponentName)} was deze keer sterker. Probeer een andere volgorde of andere kaarten.`} ${esc(extra)}</p>
-        <div class="battle-bar">
-          ${again ? `<button class="btn small" id="againBattle" type="button">${esc(again.label)}</button>` : ''}
-          <button class="link" id="backBattle" type="button">Terug naar Battle</button>
+    <div class="bt-layout">
+      <div>
+        <div class="arena bt-arena">
+          <div class="fighter bt-side" id="side-me"></div>
+          <div class="vs" aria-hidden="true">VS</div>
+          <div class="fighter bt-side" id="side-op"></div>
         </div>
-      </div>`;
-      if (again) $('#againBattle').onclick = again.run;
-      $('#backBattle').onclick = () => renderBattle(view);
+        <p class="msg" id="btMsg" role="status" style="margin:8px 0 0"></p>
+        <div class="bt-actions" id="btActions"></div>
+      </div>
+      <div>
+        <div id="battleResult"></div>
+        <ol class="battle-log" id="battleLog" aria-live="polite"></ol>
+      </div>
+    </div>
+  </section>`;
+  $('#btBack').onclick = () => { stopBattlePoll(); renderBattle(view); };
+
+  const drawSides = () => {
+    $('#side-me').innerHTML = sideHtml(b, me, disp[me], true);
+    $('#side-op').innerHTML = sideHtml(b, op, disp[op], false);
+  };
+  const log = $('#battleLog');
+  const addLog = (e) => {
+    const t = eventText(e, b, names);
+    if (!t) return;
+    const li = document.createElement('li');
+    li.innerHTML = t; li.className = e.s === me ? 'mine' : e.s ? 'theirs' : 'ko-line';
+    if (e.t === 'ko' || e.t === 'end') li.className = 'ko-line';
+    log.prepend(li);
+  };
+  // Oude gebeurtenissen meteen in het verslag (zonder animatie)
+  const cutoff = newEvents.length ? prev.round : Infinity;
+  for (const e of events) if (e.r <= cutoff) addLog(e);
+  drawSides();
+
+  // Nieuwe ronde afspelen
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  for (const e of newEvents) {
+    if (e.t === 'switch' || e.t === 'enter') disp[e.s].active = e.i;
+    if (e.t === 'atk') {
+      const d = otherSide(e.s);
+      disp[d].hp[e.di ?? disp[d].active] = e.hp;
     }
-    if (!skip && !reduce) await sleep(ev.type === 'attack' ? 650 : ev.type === 'ko' ? 700 : 450);
+    addLog(e);
+    drawSides();
+    if (e.t === 'atk' && !reduce) {
+      const target = $(e.s === me ? '#side-op' : '#side-me');
+      const pop = document.createElement('span');
+      pop.className = 'dmg-pop' + (e.k !== 'attack' || e.crit ? ' big' : '');
+      pop.textContent = `-${e.d}`;
+      target.querySelector('.fighter-card').appendChild(pop);
+      target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit');
+    }
+    if (e.t === 'ko' && !reduce) $(e.s === me ? '#side-me' : '#side-op').classList.add('ko');
+    if (!reduce) await sleep(e.t === 'atk' ? 750 : 500);
+    if (!$('#battleLog')) return; // intussen weggeklikt
   }
+  // Eindtoestand (energie e.d.) tonen
+  for (const s of ['A', 'B']) Object.assign(disp[s], { active: b.state[s].active, hp: [...b.state[s].hp], energy: b.state[s].energy });
+  drawSides();
+
+  const actions = $('#btActions'), msg = $('#btMsg');
+  if (b.status === 'done') {
+    const won = b.winner === me;
+    const coins = me === 'A' ? b.coins_a : b.coins_b;
+    if (coins) {
+      const { data: w } = await sb.from('user_wallet').select('polycoins').eq('user_id', state.session.user.id).maybeSingle();
+      if (w) { state.wallet = w.polycoins; syncCoinUI(); }
+    }
+    $('#battleResult').innerHTML = `<div class="battle-result ${won ? 'won' : 'lost'}">
+      <h3>${won ? 'Gewonnen!' : 'Verloren…'}</h3>
+      <p>${b.forfeit ? (won ? `${esc(oppName)} gaf op.` : 'Je gaf op.') : won ? `Je team heeft ${esc(oppName)} verslagen.` : `${esc(oppName)} was deze keer sterker.`}
+        ${coins ? `<strong>+${coins} polycoins!</strong>` : won ? '(Je daglimiet voor beloningen is bereikt.)' : ''}</p>
+      <div class="battle-bar">
+        ${b.mode === 'pve' ? `<button class="btn small" id="btAgain" type="button">Opnieuw (${DIFFS[b.difficulty].label})</button>` : ''}
+        <button class="link" id="btBack2" type="button">Terug naar Battle</button>
+      </div></div>`;
+    $('#btBack2').onclick = () => renderBattle(view);
+    if ($('#btAgain')) $('#btAgain').onclick = async () => {
+      const cards = b.state[me].cards;
+      const { data, error: e2 } = await sb.rpc('tb_start_pve', { p_cards: cards, p_difficulty: b.difficulty });
+      if (e2) { alert(e2.message); return; }
+      openBattle(view, data);
+    };
+    return;
+  }
+
+  const waiting = (b.state.moved || {})[me];
+  if (waiting) {
+    actions.innerHTML = '';
+    msg.className = 'msg'; msg.textContent = `Je zet is gekozen. Wachten op ${oppName}…`;
+    if ($('#btForfeit')) $('#btForfeit').onclick = async () => {
+      if (!confirm('Wil je echt opgeven?')) return;
+      const { error: ef } = await sb.rpc('tb_act', { p_id: b.id, p_action: 'forfeit' });
+      if (ef) { msg.className = 'msg err'; msg.textContent = ef.message; return; }
+      openBattle(view, b.id, b);
+    };
+    // Af en toe kijken of de tegenstander al gekozen heeft
+    battleState.poll = setInterval(async () => {
+      if (!$('#btActions')) return stopBattlePoll();
+      const { data: n } = await sb.from('tbattles').select('round, status').eq('id', b.id).single();
+      if (n && (n.round !== b.round || n.status !== b.status)) { stopBattlePoll(); openBattle(view, b.id, b); }
+    }, 4000);
+    return;
+  }
+
+  const side = b.state[me], a = side.active;
+  const can = {
+    attack: true, guard: true,
+    power: side.energy >= 2,
+    special: side.sp[a] > 0 && side.energy >= 4,
+    switch: side.hp.some((h, i) => i !== a && h > 0),
+  };
+  actions.innerHTML = Object.entries(MOVES).map(([k, m]) => (k === 'special' && !(side.sp[a] > 0)) ? '' :
+    `<button type="button" class="move-btn" data-move="${k}" ${can[k] ? '' : 'disabled'}>
+      <span class="move-icon">${m.icon}</span><span>${k === 'special' ? esc(cardById(side.cards[a])?.special_name || m.label) : m.label}</span><small>${m.info}</small></button>`).join('')
+;
+  msg.className = 'msg'; msg.textContent = 'Kies je zet.';
+
+  const send = async (move, target = null) => {
+    actions.querySelectorAll('button').forEach(x => { x.disabled = true; });
+    msg.textContent = 'Bezig…';
+    const { data: nb, error: e3 } = await sb.rpc('tb_act', { p_id: b.id, p_action: move, p_target: target });
+    if (e3) { msg.className = 'msg err'; msg.textContent = e3.message; openBattle(view, b.id); return; }
+    openBattle(view, b.id, b);
+  };
+  if ($('#btForfeit')) $('#btForfeit').onclick = () => { if (confirm('Wil je echt opgeven?')) send('forfeit'); };
+  actions.querySelectorAll('[data-move]').forEach(btn => {
+    btn.onclick = () => {
+      const move = btn.dataset.move;
+      if (move === 'switch') {
+        msg.textContent = 'Kies op je bank de kaart waarnaar je wil wisselen.';
+        $('#side-me').classList.add('choosing');
+        $('#side-me').querySelectorAll('[data-bench]:not([disabled])').forEach(bc => {
+          bc.onclick = () => send('switch', Number(bc.dataset.bench));
+        });
+        return;
+      }
+      send(move);
+    };
+  });
 }
 
 initBackground();
