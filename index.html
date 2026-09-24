@@ -167,6 +167,12 @@ a{color:var(--amber-soft)}
 .whelp .link:disabled{opacity:.4;cursor:default}
 .hint-chip{background:rgba(201,180,88,.18);border:1px solid var(--yellow);color:var(--yellow-soft);border-radius:999px;padding:3px 10px;font:700 13px var(--body)}
 
+/* Melding nieuwe versie */
+.update-bar{position:fixed;left:0;right:0;margin:0 auto;bottom:18px;z-index:1000;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+  width:max-content;max-width:calc(100vw - 24px);padding:12px 16px;background:rgba(29,34,41,.97);border:1px solid var(--yellow);border-radius:16px;
+  box-shadow:0 14px 34px -8px rgba(0,0,0,.7);color:var(--ink);font-weight:600;animation:menu-in .25s ease both}
+.update-bar .btn{width:auto}
+
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
 .today-grid{display:grid;gap:32px;align-items:start}
 .today-grid .col{max-width:none}
@@ -751,7 +757,7 @@ function renderAuth(mode) {
   <main class="wrap">
     <div class="hero" aria-hidden="true">${tiles('POLY', ['g','y','x','g'])}</div>
     <h1>POLYGON <em>Trading Cards</em></h1>
-    <p class="hint">Los de dagelijkse Wordle op, plak je resultaat en verzamel facetkaarten van je collega's.</p>
+    <p class="hint">Speel elke dag twee Wordles, open pakjes en verzamel de kaarten van je collega's.</p>
     <form id="authform" class="form">
       ${reg ? '<label>Naam<input name="name" required autocomplete="nickname" maxlength="30"></label>' : ''}
       <label>E-mail<input name="email" type="email" required autocomplete="email"></label>
@@ -2652,6 +2658,54 @@ async function openBattle(view, id, prev = null) {
     };
   });
 }
+
+// ---------- Melding bij een nieuwe versie van de site ----------
+// Vergelijkt de CSS + code van deze pagina met de versie op de server. Geen versienummer nodig:
+// elke wijziging aan index.html wordt vanzelf opgemerkt.
+function siteFingerprint(doc) {
+  const style = doc.querySelector('style')?.textContent || '';
+  const scripts = [...doc.querySelectorAll('script:not([src])')];
+  const code = scripts.length ? scripts[scripts.length - 1].textContent : '';
+  let h = 5381;
+  const txt = style + '\u0000' + code;
+  for (let i = 0; i < txt.length; i++) h = ((h << 5) + h + txt.charCodeAt(i)) | 0;
+  return h;
+}
+const CURRENT_FINGERPRINT = siteFingerprint(document);
+let updateShown = false, lastUpdateCheck = 0;
+
+async function checkForUpdate() {
+  if (updateShown || Date.now() - lastUpdateCheck < 60000) return;
+  lastUpdateCheck = Date.now();
+  try {
+    const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+    if (siteFingerprint(doc) !== CURRENT_FINGERPRINT) showUpdateBanner();
+  } catch (_) { /* offline of geblokkeerd: later opnieuw proberen */ }
+}
+
+function showUpdateBanner() {
+  updateShown = true;
+  const bar = document.createElement('div');
+  bar.className = 'update-bar';
+  bar.setAttribute('role', 'status');
+  bar.innerHTML = `<span>✨ Er is een nieuwe versie van de site.</span>
+    <button class="btn small" type="button" id="updateNow">Vernieuwen</button>
+    <button class="link" type="button" id="updateLater" aria-label="Later">Later</button>`;
+  document.body.appendChild(bar);
+  $('#updateNow').onclick = async () => {
+    $('#updateNow').disabled = true;
+    // Eerst de browsercache bijwerken, zodat het herladen zeker de nieuwe versie toont
+    try { await fetch(location.pathname, { cache: 'reload' }); } catch (_) {}
+    location.reload();
+  };
+  $('#updateLater').onclick = () => { bar.remove(); setTimeout(() => { updateShown = false; }, 15 * 60000); };
+}
+
+setInterval(checkForUpdate, 5 * 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
+addEventListener('focus', checkForUpdate);
 
 initBackground();
 init();
