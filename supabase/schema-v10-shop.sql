@@ -300,7 +300,8 @@ end $$;
 
 
 grant execute on function public.shop_buy_pack(text) to authenticated;
-grant execute on function public.shop_buy_card(int) to authenticated;
+-- Gericht een kaart kopen is uitgeschakeld (zou tonen welke kaarten er bestaan)
+revoke execute on function public.shop_buy_card(int) from public, anon, authenticated;
 grant execute on function public.shop_sell_duplicates(int, int) to authenticated;
 grant execute on function public.wordle_hint(int) to authenticated;
 grant execute on function public.wordle_extra_guess(int) to authenticated;

@@ -156,7 +156,7 @@ a{color:var(--amber-soft)}
 .pack.mini{width:78px;flex-shrink:0;animation:none;cursor:default;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
 .shop-pack-info{display:grid;gap:6px;justify-items:start}
 .shop-pack-info small{color:var(--ink-soft)}
-.shop-list{max-height:210px;overflow-y:auto;padding-right:6px}
+.shop-list{max-height:calc(100vh - 260px);overflow-y:auto;padding-right:6px}
 .shop-list .battle-row{padding:6px 0}
 .shop-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px;max-height:calc(100vh - 250px);overflow-y:auto;padding:4px 6px 4px 2px}
 .shop-card{display:grid;gap:6px}
@@ -941,6 +941,7 @@ const TABS = [
   { id: 'battle', label: 'Battle', icon: '⚔️', badge: 'battle' },
   { id: 'friends', label: 'Friends', icon: '👥', badge: 'friend' },
   { id: 'trade', label: 'Trade', icon: '🔁' },
+  { id: 'shop', label: 'Shop', icon: '🛒' },
 ];
 
 function renderMain() {
@@ -1042,7 +1043,6 @@ const INFO = {
   shop: ['Shop', `
     <p>Besteed je polycoins — die verdien je met battles en met dubbele trekkingen.</p>
     <ul><li><strong>Pakjes</strong>: Basic Pack (1 kaart, 60 🪙) of Epic Pack (3 kaarten, de 3e gegarandeerd epic of legendary, 200 🪙).</li>
-    <li><strong>Kaart kopen</strong>: koop gericht een kaart die je nog mist (common 150 · epic 400 · legendary 1000 🪙).</li>
     <li><strong>Dubbels verkopen</strong>: common 15 · epic 40 · legendary 100 · troostkat 5 🪙 per extra exemplaar. Je houdt altijd 1 exemplaar.</li>
     <li><strong>Wordle-hulp</strong> (op Today, tijdens een ronde): een letter onthullen voor 40 🪙 (max 2 per ronde) of een 7e poging voor 60 🪙.</li></ul>`],
   trade: ['Traden', `
@@ -1290,6 +1290,7 @@ function renderView() {
   else if (state.tab === 'battle') renderBattle(view);
   else if (state.tab === 'friends') renderFriends(view);
   else if (state.tab === 'trade') renderTrade(view);
+  else if (state.tab === 'shop') renderShop(view);
 }
 
 // ---------- Tab: Today — eigen Wordle, 2 rondes per dag ----------
@@ -2164,10 +2165,6 @@ const shopState = { person: '' };
 const setWallet = w => { if (typeof w === 'number') { state.wallet = w; syncCoinUI(); } };
 
 function renderShop(view) {
-  const people = [...new Set(state.cards.filter(c => c.rarity !== 'cat').map(c => c.person))];
-  const missing = state.cards
-    .filter(c => c.rarity !== 'cat' && !state.owned.has(c.id) && (!shopState.person || c.person === shopState.person))
-    .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || a.id - b.id);
   const dupes = state.cards
     .filter(c => (state.owned.get(c.id) || 0) > 1)
     .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || a.id - b.id);
@@ -2189,7 +2186,9 @@ function renderShop(view) {
               <button class="btn small" data-buy-pack="${k}" type="button" ${state.wallet < p.price ? 'disabled' : ''}>Kopen · ${p.price} 🪙</button></div>
           </div>`).join('')}</div>
 
-        <h3 style="margin-top:20px">Dubbels verkopen</h3>
+      </div>
+      <div>
+        <h3>Dubbels verkopen</h3>
         ${dupes.length ? `<p class="hint" style="margin-bottom:6px">Je houdt altijd 1 exemplaar. Alles verkopen levert ${dupeTotal} 🪙 op.</p>
           <div class="shop-list">${dupes.map(c => {
             const extra = state.owned.get(c.id) - 1, price = SHOP.sell[c.rarity];
@@ -2204,28 +2203,11 @@ function renderShop(view) {
 
         <h3 style="margin-top:20px">Wordle-hulp</h3>
         <p class="hint">Tijdens een Wordle-ronde op <strong>Today</strong>: 💡 een letter onthullen voor ${SHOP.hint} 🪙 (max 2 per ronde) of ➕ een 7e poging voor ${SHOP.extra} 🪙 (koop die vóór je 6e gok).</p>
-      </div>
-      <div>
-        <div class="battle-bar" style="margin-bottom:8px">
-          <h3 style="margin:0">Kaart kopen</h3>
-          <select id="shopPerson" class="tselect" style="width:auto;min-width:150px">
-            <option value="">Alle collega's</option>
-            ${people.map(p => `<option value="${esc(p)}"${p === shopState.person ? ' selected' : ''}>${esc(p)}</option>`).join('')}
-          </select>
-        </div>
-        <p class="hint" style="margin-bottom:8px">Kaarten die je nog mist: common ${SHOP.buy.common} · epic ${SHOP.buy.epic} · legendary ${SHOP.buy.legendary} 🪙.</p>
-        ${missing.length ? `<div class="shop-cards">${missing.map(c => `
-          <div class="shop-card">
-            ${renderCard(c)}
-            <button class="btn small" data-buy-card="${c.id}" type="button" ${state.wallet < SHOP.buy[c.rarity] ? 'disabled' : ''}>${SHOP.buy[c.rarity]} 🪙</button>
-          </div>`).join('')}</div>`
-          : '<p class="hint">Je hebt alle kaarten van deze selectie al!</p>'}
-      </div>
+
     </div>
   </section>`;
 
   const msg = (text, ok) => { const m = $('#shopMsg'); m.className = 'msg tmsg ' + (ok ? 'ok' : 'err'); m.textContent = text; };
-  $('#shopPerson').onchange = e => { shopState.person = e.target.value; renderShop(view); };
 
   view.querySelectorAll('[data-buy-pack]').forEach(b => b.onclick = async () => {
     const p = SHOP.packs[b.dataset.buyPack];
@@ -2243,18 +2225,6 @@ function renderShop(view) {
     $('#packDone').innerHTML = `<p class="result">${dup ? `${dup === data.cards.length ? 'Allemaal dubbels' : `${dup} dubbel${dup > 1 ? 's' : ''}`} — die kan je verkopen of ruilen.` : 'Allemaal nieuwe kaarten voor je boek!'}</p>
       <button class="btn small" id="packClose" type="button">Verder</button>`;
     $('#packClose').onclick = () => { dlg.close(); renderShop(view); };
-  });
-
-  view.querySelectorAll('[data-buy-card]').forEach(b => b.onclick = async () => {
-    const c = cardById(b.dataset.buyCard);
-    if (!confirm(`"${c.name}" kopen voor ${SHOP.buy[c.rarity]} polycoins?`)) return;
-    b.disabled = true;
-    const { data, error } = await sb.rpc('shop_buy_card', { p_card_id: c.id });
-    if (error) { msg(error.message); b.disabled = false; return; }
-    setWallet(data.wallet);
-    state.owned.set(c.id, 1);
-    renderShop(view);
-    msg(`"${c.name}" staat nu in je boek!`, true);
   });
 
   view.querySelectorAll('[data-sell]').forEach(b => b.onclick = async () => {
