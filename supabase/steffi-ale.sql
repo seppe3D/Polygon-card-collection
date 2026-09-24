@@ -110,10 +110,10 @@ update public.cards set
 where person = 'Ale' and slot = 8;
 
 update public.cards set
-  name = 'Volcano Serenade', image_url = 'cards/ale-9.jpg',
-  flavor_text = 'Every riff erupts.',
+  name = 'Rainforest Rockstar', image_url = 'cards/ale-9.jpg',
+  flavor_text = 'Turn it up. The jungle is listening.',
   special_name = 'Pura Vida Power Chord',
-  special_desc = 'Strikes a chord so mighty that the volcano answers, scorching every opponent in a wave of lava and sound.',
+  special_desc = 'Unleashes a thunderous riff that echoes through the rainforest, stunning every opponent in a storm of sound and colour.',
   special_power = 80
 where person = 'Ale' and slot = 9;
 
