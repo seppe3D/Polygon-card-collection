@@ -124,7 +124,7 @@ a{color:var(--amber-soft)}
 .round-tab small{font:600 12.5px var(--body);color:var(--ink-soft)}
 .round-tab.active{border-color:var(--yellow);background:rgba(201,180,88,.16)}
 .round-tab.done small{color:var(--green-soft)}
-.wboard{display:grid;gap:6px;width:min(300px,100%,calc((100vh - 400px) * .86));min-width:220px;margin:0 auto 8px}
+.wboard{--rows:6;display:grid;gap:6px;width:min(300px,100%,calc((100vh - 430px) * 5 / var(--rows)));min-width:200px;margin:0 auto 8px}
 .wrow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wrow.shake{animation:shake .4s ease}
 .wtile{aspect-ratio:1;display:grid;place-items:center;border:2px solid var(--line);border-radius:10px;background:rgba(21,24,29,.65);
@@ -148,6 +148,24 @@ a{color:var(--amber-soft)}
 .big-lock{font-size:52px;line-height:1;margin-bottom:10px}
 .countdown{font:800 30px var(--display);color:var(--yellow-soft);margin:6px 0 0}
 @media (prefers-reduced-motion:reduce){.wtile.flip,.wtile.filled{animation:none}}
+
+/* Shop */
+.shop-balance{font-size:17px;padding:10px 18px}
+.shop-packs{display:grid;gap:12px}
+.shop-pack{display:flex;gap:16px;align-items:center;background:rgba(35,41,50,.88);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px}
+.pack.mini{width:78px;flex-shrink:0;animation:none;cursor:default;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.shop-pack-info{display:grid;gap:6px;justify-items:start}
+.shop-pack-info small{color:var(--ink-soft)}
+.shop-list{max-height:210px;overflow-y:auto;padding-right:6px}
+.shop-list .battle-row{padding:6px 0}
+.shop-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px;max-height:calc(100vh - 250px);overflow-y:auto;padding:4px 6px 4px 2px}
+.shop-card{display:grid;gap:6px}
+.shop-card .btn{width:100%}
+@media (max-width:560px){.shop-cards{grid-template-columns:repeat(2,1fr);max-height:none}}
+.whelp{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center;align-items:center;margin-top:8px}
+.whelp .link{font-size:14px;padding:4px 2px}
+.whelp .link:disabled{opacity:.4;cursor:default}
+.hint-chip{background:rgba(201,180,88,.18);border:1px solid var(--yellow);color:var(--yellow-soft);border-radius:999px;padding:3px 10px;font:700 13px var(--body)}
 
 /* Vandaag-tab: kaartopening naast het formulier op brede schermen */
 .today-grid{display:grid;gap:32px;align-items:start}
@@ -923,6 +941,7 @@ const TABS = [
   { id: 'battle', label: 'Battle', icon: '⚔️', badge: 'battle' },
   { id: 'friends', label: 'Friends', icon: '👥', badge: 'friend' },
   { id: 'trade', label: 'Trade', icon: '🔁' },
+  { id: 'shop', label: 'Shop', icon: '🛒' },
 ];
 
 function renderMain() {
@@ -1020,6 +1039,12 @@ const INFO = {
     <p>Deel je code met collega's, of voer hun code in om een vriendschapsverzoek te sturen.</p>
     <ul><li>Zodra ze accepteren, kan je elkaars statistieken bekijken, kaarten ruilen en elkaar uitdagen in Battle.</li>
     <li>Klik op een vriend om zijn of haar statistieken te zien.</li></ul>`],
+  shop: ['Shop', `
+    <p>Besteed je polycoins — die verdien je met battles en met dubbele trekkingen.</p>
+    <ul><li><strong>Pakjes</strong>: Basic Pack (1 kaart, 60 🪙) of Epic Pack (3 kaarten, de 3e gegarandeerd epic of legendary, 200 🪙).</li>
+    <li><strong>Kaart kopen</strong>: koop gericht een kaart die je nog mist (common 150 · epic 400 · legendary 1000 🪙).</li>
+    <li><strong>Dubbels verkopen</strong>: common 15 · epic 40 · legendary 100 · troostkat 5 🪙 per extra exemplaar. Je houdt altijd 1 exemplaar.</li>
+    <li><strong>Wordle-hulp</strong> (op Today, tijdens een ronde): een letter onthullen voor 40 🪙 (max 2 per ronde) of een 7e poging voor 60 🪙.</li></ul>`],
   trade: ['Traden', `
     <p>Stel een ruil voor aan een vriend. Je kan enkel <strong>dubbels</strong> aanbieden — je houdt altijd minstens 1 exemplaar van elke kaart over.</p>
     <ul><li>Je vriend kan accepteren, een tegenbod doen of annuleren.</li>
@@ -1265,6 +1290,7 @@ function renderView() {
   else if (state.tab === 'battle') renderBattle(view);
   else if (state.tab === 'friends') renderFriends(view);
   else if (state.tab === 'trade') renderTrade(view);
+  else if (state.tab === 'shop') renderShop(view);
 }
 
 // ---------- Tab: Today — eigen Wordle, 2 rondes per dag ----------
@@ -1290,9 +1316,9 @@ const fmtDuration = sec => {
 };
 function roundStatus(s) {
   if (!s.open) return `🔒 opent om ${s.opens}`;
-  if (s.status === 'won') return `✓ opgelost in ${s.attempts}/6`;
+  if (s.status === 'won') return `✓ opgelost in ${s.attempts}/${s.max_guesses || 6}`;
   if (s.status === 'lost') return '✗ niet opgelost';
-  if (s.rows.length) return `bezig · ${s.rows.length}/6`;
+  if (s.rows.length) return `bezig · ${s.rows.length}/${s.max_guesses || 6}`;
   return 'klaar om te spelen';
 }
 function roundSummary(s) {
@@ -1302,7 +1328,7 @@ function roundSummary(s) {
 }
 
 function boardHtml(s) {
-  return Array.from({ length: 6 }, (_, i) => {
+  return Array.from({ length: s.max_guesses || 6 }, (_, i) => {
     const row = s.rows[i];
     const letters = row ? row.w : (i === s.rows.length && !isDone(s) ? wordle.input : '');
     return `<div class="wrow" id="wr-${i}">${Array.from({ length: 5 }, (_, j) => {
@@ -1357,9 +1383,10 @@ function drawToday(view) {
       ${pageHead('Wordle', 'today')}
       <div class="round-tabs" id="roundTabs">${roundTabsHtml()}</div>
       ${s.open ? `
-        <div class="wboard" id="wboard">${boardHtml(s)}</div>
+        <div class="wboard" id="wboard" style="--rows:${s.max_guesses || 6}">${boardHtml(s)}</div>
         <p class="msg wmsg${isDone(s) ? ' ok' : ''}" id="wmsg" role="alert">${roundSummary(s)}</p>
-        ${isDone(s) ? '' : `<div class="wkeys" id="wkeys">${keyboardHtml(s)}</div>`}`
+        ${isDone(s) ? '' : `<div class="wkeys" id="wkeys">${keyboardHtml(s)}</div>
+        <div class="whelp" id="whelp">${helpHtml(s)}</div>`}`
       : `<div class="round-closed">
           <div class="big-lock" aria-hidden="true">🔒</div>
           <p>De ${ROUNDS[s.slot].name.toLowerCase()}-Wordle opent om <strong>${s.opens}</strong> (Belgische tijd).</p>
@@ -1375,6 +1402,7 @@ function drawToday(view) {
   // Eén handler op het hele toetsenbord: blijft werken als de toetsen opnieuw getekend worden
   const keys = $('#wkeys');
   if (keys) keys.onclick = e => { const b = e.target.closest('[data-key]'); if (b) wordleKey(b.dataset.key); };
+  bindHelp(s);
 
   // Aftellen tot een ronde opent; op 0 herladen we de rondes
   clearInterval(wordle.timer);
@@ -1393,6 +1421,40 @@ function drawToday(view) {
     tick();
     wordle.timer = setInterval(tick, 1000);
   }
+}
+
+// Wordle-hulp uit de Shop: onthulde letters + knoppen
+function helpHtml(s) {
+  const hints = s.hints || [];
+  return `${hints.map(h => `<span class="hint-chip">💡 ${esc(h.letter)} op plaats ${h.pos}</span>`).join('')}
+    <button type="button" class="link" data-help="hint" ${hints.length >= 2 ? 'disabled' : ''}>💡 Letter onthullen · ${SHOP.hint} 🪙 (${hints.length}/2)</button>
+    ${(s.max_guesses || 6) < 7 ? `<button type="button" class="link" data-help="extra">➕ 7e poging · ${SHOP.extra} 🪙</button>` : '<span class="hint-chip">➕ 7e poging gekocht</span>'}`;
+}
+function bindHelp(s) {
+  const box = $('#whelp');
+  if (!box) return;
+  box.onclick = async e => {
+    const b = e.target.closest('[data-help]');
+    if (!b || b.disabled || wordle.busy) return;
+    const kind = b.dataset.help;
+    if (!confirm(kind === 'hint' ? `Een letter onthullen voor ${SHOP.hint} polycoins?` : `Een 7e poging kopen voor ${SHOP.extra} polycoins?`)) return;
+    wordle.busy = true;
+    const { data, error } = await sb.rpc(kind === 'hint' ? 'wordle_hint' : 'wordle_extra_guess', { p_slot: s.slot });
+    wordle.busy = false;
+    const msg = $('#wmsg');
+    if (error) { msg.className = 'msg wmsg err'; msg.textContent = error.message; return; }
+    setWallet(data.wallet);
+    if (kind === 'hint') {
+      s.hints = [...(s.hints || []), { pos: data.pos, letter: data.letter }];
+      msg.className = 'msg wmsg ok'; msg.textContent = `De letter ${data.letter} staat op plaats ${data.pos}.`;
+    } else {
+      s.max_guesses = data.max_guesses;
+      $('#wboard').style.setProperty('--rows', s.max_guesses);
+      $('#wboard').innerHTML = boardHtml(s);
+      msg.className = 'msg wmsg ok'; msg.textContent = 'Je hebt nu 7 pogingen voor deze ronde.';
+    }
+    box.innerHTML = helpHtml(s);
+  };
 }
 
 function roundTabsHtml() {
@@ -1463,6 +1525,7 @@ async function submitGuess(s) {
     state.owned.set(data.card.id, (state.owned.get(data.card.id) || 0) + 1);
     if (data.coinsEarned) { state.wallet += data.coinsEarned; syncCoinUI(); }
     $('#wkeys')?.remove();
+    $('#whelp')?.remove();
     msg.className = 'msg wmsg ok'; msg.innerHTML = roundSummary(s);
     $('#roundTabs').innerHTML = roundTabsHtml();
     bindRoundTabs($('#view'));
@@ -2086,6 +2149,126 @@ function openCounterBuilder(t, others) {
     theirs: proposerIsMe ? t.recipient_cards : t.proposer_cards,
   });
   $('#tradeBuilder').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ---------- Tab: Shop — alles wordt server-side afgerekend (schema-v10-shop.sql) ----------
+const SHOP = {
+  packs: {
+    basic: { name: 'Basic Pack', price: 60, count: 1, desc: '1 kaart · 75% common, 22% epic, 3% legendary' },
+    epic: { name: 'Epic Pack', price: 200, count: 3, desc: '3 kaarten · de 3e is gegarandeerd epic of legendary' },
+  },
+  buy: { common: 150, epic: 400, legendary: 1000 },
+  sell: { common: 15, epic: 40, legendary: 100, cat: 5 },
+  hint: 40, extra: 60,
+};
+const shopState = { person: '' };
+const setWallet = w => { if (typeof w === 'number') { state.wallet = w; syncCoinUI(); } };
+
+function renderShop(view) {
+  const people = [...new Set(state.cards.filter(c => c.rarity !== 'cat').map(c => c.person))];
+  const missing = state.cards
+    .filter(c => c.rarity !== 'cat' && !state.owned.has(c.id) && (!shopState.person || c.person === shopState.person))
+    .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || a.id - b.id);
+  const dupes = state.cards
+    .filter(c => (state.owned.get(c.id) || 0) > 1)
+    .sort((a, b) => (RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]) || a.id - b.id);
+  const dupeTotal = dupes.reduce((n, c) => n + (state.owned.get(c.id) - 1) * SHOP.sell[c.rarity], 0);
+
+  view.innerHTML = `<section class="col" style="max-width:none">
+    <div class="battle-top">
+      ${pageHead('Shop', 'shop')}
+      <span class="coinpill shop-balance">🪙 <span data-coin>${state.wallet}</span> polycoins</span>
+    </div>
+    <p class="msg tmsg" id="shopMsg" role="alert"></p>
+    <div class="two-col shop-grid">
+      <div>
+        <h3>Pakjes</h3>
+        <div class="shop-packs">${Object.entries(SHOP.packs).map(([k, p]) => `
+          <div class="shop-pack">
+            <div class="pack mini" aria-hidden="true"><div class="pack-body"><div class="pack-label"><span class="pack-logo">POLYGON</span><span class="pack-sub">TRADING CARDS</span><span class="pack-count">${p.count === 1 ? '1 kaart' : `${p.count} kaarten`}</span></div></div><div class="pack-top"></div></div>
+            <div class="shop-pack-info"><strong>${p.name}</strong><small>${p.desc}</small>
+              <button class="btn small" data-buy-pack="${k}" type="button" ${state.wallet < p.price ? 'disabled' : ''}>Kopen · ${p.price} 🪙</button></div>
+          </div>`).join('')}</div>
+
+        <h3 style="margin-top:20px">Dubbels verkopen</h3>
+        ${dupes.length ? `<p class="hint" style="margin-bottom:6px">Je houdt altijd 1 exemplaar. Alles verkopen levert ${dupeTotal} 🪙 op.</p>
+          <div class="shop-list">${dupes.map(c => {
+            const extra = state.owned.get(c.id) - 1, price = SHOP.sell[c.rarity];
+            return `<div class="battle-row">
+              <span class="trade-chip r-${c.rarity}">${esc(c.name)}</span>
+              <span class="battle-row-text"><small>${extra} extra · ${price} 🪙 per stuk</small></span>
+              <button class="link" data-sell="${c.id}" data-count="1" type="button">Verkoop 1</button>
+              ${extra > 1 ? `<button class="link" data-sell="${c.id}" data-count="${extra}" type="button">Alle ${extra} (+${extra * price})</button>` : ''}
+            </div>`;
+          }).join('')}</div>`
+          : '<p class="hint">Je hebt geen dubbels om te verkopen.</p>'}
+
+        <h3 style="margin-top:20px">Wordle-hulp</h3>
+        <p class="hint">Tijdens een Wordle-ronde op <strong>Today</strong>: 💡 een letter onthullen voor ${SHOP.hint} 🪙 (max 2 per ronde) of ➕ een 7e poging voor ${SHOP.extra} 🪙 (koop die vóór je 6e gok).</p>
+      </div>
+      <div>
+        <div class="battle-bar" style="margin-bottom:8px">
+          <h3 style="margin:0">Kaart kopen</h3>
+          <select id="shopPerson" class="tselect" style="width:auto;min-width:150px">
+            <option value="">Alle collega's</option>
+            ${people.map(p => `<option value="${esc(p)}"${p === shopState.person ? ' selected' : ''}>${esc(p)}</option>`).join('')}
+          </select>
+        </div>
+        <p class="hint" style="margin-bottom:8px">Kaarten die je nog mist: common ${SHOP.buy.common} · epic ${SHOP.buy.epic} · legendary ${SHOP.buy.legendary} 🪙.</p>
+        ${missing.length ? `<div class="shop-cards">${missing.map(c => `
+          <div class="shop-card">
+            ${renderCard(c)}
+            <button class="btn small" data-buy-card="${c.id}" type="button" ${state.wallet < SHOP.buy[c.rarity] ? 'disabled' : ''}>${SHOP.buy[c.rarity]} 🪙</button>
+          </div>`).join('')}</div>`
+          : '<p class="hint">Je hebt alle kaarten van deze selectie al!</p>'}
+      </div>
+    </div>
+  </section>`;
+
+  const msg = (text, ok) => { const m = $('#shopMsg'); m.className = 'msg tmsg ' + (ok ? 'ok' : 'err'); m.textContent = text; };
+  $('#shopPerson').onchange = e => { shopState.person = e.target.value; renderShop(view); };
+
+  view.querySelectorAll('[data-buy-pack]').forEach(b => b.onclick = async () => {
+    const p = SHOP.packs[b.dataset.buyPack];
+    if (!confirm(`${p.name} kopen voor ${p.price} polycoins?`)) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc('shop_buy_pack', { p_kind: b.dataset.buyPack });
+    if (error) { msg(error.message); b.disabled = false; return; }
+    setWallet(data.wallet);
+    for (const c of data.cards) state.owned.set(c.id, (state.owned.get(c.id) || 0) + 1);
+    const dlg = $('#packModal');
+    dlg.innerHTML = `<div class="packbox"><h2>${p.name}</h2><div class="stage" id="packStage"></div><div id="packDone"></div></div>`;
+    dlg.showModal();
+    await openPack($('#packStage'), data.cards);
+    const dup = data.cards.filter(c => c.is_duplicate).length;
+    $('#packDone').innerHTML = `<p class="result">${dup ? `${dup === data.cards.length ? 'Allemaal dubbels' : `${dup} dubbel${dup > 1 ? 's' : ''}`} — die kan je verkopen of ruilen.` : 'Allemaal nieuwe kaarten voor je boek!'}</p>
+      <button class="btn small" id="packClose" type="button">Verder</button>`;
+    $('#packClose').onclick = () => { dlg.close(); renderShop(view); };
+  });
+
+  view.querySelectorAll('[data-buy-card]').forEach(b => b.onclick = async () => {
+    const c = cardById(b.dataset.buyCard);
+    if (!confirm(`"${c.name}" kopen voor ${SHOP.buy[c.rarity]} polycoins?`)) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc('shop_buy_card', { p_card_id: c.id });
+    if (error) { msg(error.message); b.disabled = false; return; }
+    setWallet(data.wallet);
+    state.owned.set(c.id, 1);
+    renderShop(view);
+    msg(`"${c.name}" staat nu in je boek!`, true);
+  });
+
+  view.querySelectorAll('[data-sell]').forEach(b => b.onclick = async () => {
+    const c = cardById(b.dataset.sell), n = Number(b.dataset.count);
+    if (n > 1 && !confirm(`${n} exemplaren van "${c.name}" verkopen voor ${n * SHOP.sell[c.rarity]} polycoins?`)) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc('shop_sell_duplicates', { p_card_id: c.id, p_count: n });
+    if (error) { msg(error.message); b.disabled = false; return; }
+    setWallet(data.wallet);
+    state.owned.set(c.id, state.owned.get(c.id) - data.sold);
+    renderShop(view);
+    msg(`Verkocht: ${data.sold}× "${c.name}" voor ${data.earned} polycoins.`, true);
+  });
 }
 
 // ---------- Tab: Battle (tactisch, ronde per ronde) ----------
